@@ -29,13 +29,15 @@ class Device(metaclass=abc.ABCMeta):
     def port_name(self, port):
         return f'{self.name}_{port}'
 
-    @abc.abstractmethod
     def update(self, time):
         pass
 
-    @abc.abstractmethod
     def connect(self, cable, port_name):
         pass
+
+    def log(self, time, msg):
+        logging.info(f'{time} {self.name} {msg}')
+
 
 class Hub(Device):
 
@@ -43,18 +45,21 @@ class Hub(Device):
         self.current_transmitting_port = None
         ports = {}
         for i in range(ports_count):
-            ports[f'{name}_{i+1}'] = [0, None]
+            ports[f'{name}_{i+1}'] = None
 
-        super(Device, self).__init__(name, ports)
+        super().__init__(name, ports)
 
     def retransmit(self, from_port):
         val = self.ports[from_port].value
 
-        if self.current_transmitting_port != from_port:
+        if self.current_transmitting_port is None:
+            self.current_transmitting_port = from_port
+        elif self.current_transmitting_port != from_port:
             val |= self.ports[self.current_transmitting_port]
 
-        for port in self.ports.keys():
-            self.ports[port].set_value(val, self)
+        for port, cable in self.ports.items():
+            if cable is not None:
+                cable.set_value(val, self)
 
     def update(self, time):
         pass
@@ -67,7 +72,7 @@ class Hub(Device):
         self.ports[port_name] = cable
 
         def action(device):
-            if device != self:
+            if device != self and device is not None:
                 self.retransmit(port_name)
 
         cable.add_action(action)
@@ -75,7 +80,7 @@ class Hub(Device):
 class PC(Device):
     def __init__(self, name, signal_time):
         ports = { f'{name}_1' : None }
-        super(Device, self).__init__(name, ports)
+        super().__init__(name, ports)
         self.data = []
         self.current_package = []
         self.package_index = 0
@@ -109,6 +114,7 @@ class PC(Device):
         self.load_package()
 
         if self.time_to_send:
+            self.log(time, 'waiting for sending')
             self.time_to_send -= 1
             return
         
@@ -117,10 +123,13 @@ class PC(Device):
             self.cable.set_value(self.sending_bit, self)
 
             if self.cable.value != self.sending_bit: #collision
+                self.log(time, 'collision')
                 self.readjust_max_time_to_send()
                 self.time_to_send = randint(0, self.max_time_to_send)
                 self.package_index = 0
             else:
+                if self.send_time == 0:                
+                    self.log(time, f'send {self.sending_bit}')
                 self.send_time += 1
                 if self.send_time == self.signal_time:
                     self.package_index += 1
@@ -128,7 +137,11 @@ class PC(Device):
                         self.current_package = []
                     self.send_time = 0
         
-        # if time % self.signal_time == 0 and not self.is_sending:
+        if not self.current_package:
+            self.sending_bit = None
+        
+        if time % self.signal_time == 0 and not self.is_sending:
+            self.log(time, f'recieve {self.cable.value}')
             
 
     def send(self, data):
