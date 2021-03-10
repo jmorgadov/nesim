@@ -15,11 +15,15 @@ class NetSimulation():
         self.port_to_device: Dict[str, Device] = {}
         self.devices: Dict[str, Device] = {}
         self.hosts: Dict[str, PC] = {}
+        self.end_delay = self.signal_time
     
     def is_running(self):
         device_sending = any([(d.sending_bit != EMPTY or d.time_to_send) \
              for d in self.hosts.values()])
-        return self.instructions or device_sending
+        running = self.instructions or device_sending
+        if not running:
+            self.end_delay -= 1
+        return self.end_delay > 0
 
     def add_device(self, device: Device):
         self.devices[device.name] = device
