@@ -117,12 +117,17 @@ class PC(Device):
         return self.ports[self.port_name(1)]
 
     def load_package(self):
-        if self.data and not self.current_package:
-            self.current_package = self.data[:8]
-            self.data = self.data[8:]
-            self.max_time_to_send = 8
-            self.package_index = 0
-            self.send_time = 0
+        if not self.current_package:
+            if self.data:
+                self.current_package = self.data[:8]
+                self.data = self.data[8:]
+                self.max_time_to_send = 8
+                self.package_index = 0
+                self.send_time = 0
+            elif self.sending_bit != EMPTY:
+                self.sending_bit = EMPTY
+                self.cable.set_value(EMPTY, self)
+
 
     def update(self, time):
         self.sim_time = time
@@ -148,13 +153,10 @@ class PC(Device):
                 if self.send_time == self.signal_time:
                     self.package_index += 1
                     if self.package_index == len(self.current_package):
-                        self.current_package = []
+                        self.current_package = []                     
                     self.send_time = 0
-        elif self.sending_bit != EMPTY and not self.data:
-            self.cable.set_value(EMPTY, self)
-
-        if not self.current_package:
-            self.sending_bit = EMPTY
+        # if not self.current_package:
+        #     self.sending_bit = EMPTY
 
         self.time_connected += 1
         
@@ -173,11 +175,11 @@ class PC(Device):
 
     def check_collision(self):
         if self.sending_bit != EMPTY and self.cable.value != self.sending_bit: #collision
-            self.log(self.sim_time, 'collision')
             self.readjust_max_time_to_send()
             self.time_to_send = randint(0, self.max_time_to_send)
-            self.log(self.sim_time, f'Time to send added {self.time_to_send}ms')
+            self.log(self.sim_time, f'Collision, waitting {self.time_to_send}ms to send')
             self.package_index = 0
+            self.send_time = 0
             return True
         return False
 
@@ -194,7 +196,7 @@ class PC(Device):
                device != self:
 
                 if self.cable.value == EMPTY:
-                    self.cable.set_value(self.sending_bit, None)
+                    self.cable.set_value(self.sending_bit, self)
                     return
 
                 val = self.sending_bit | self.cable.value
