@@ -13,6 +13,4 @@ instr = []
 with open('input.txt', 'r') as f:
     instr = prs.parse_instructions(f.readlines())
 
-print(instr)
-
 netsim.start(instr)

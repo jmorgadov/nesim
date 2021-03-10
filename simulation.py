@@ -9,12 +9,17 @@ class NetSimulation():
         self.instructions = []
         self.signal_time = SIGNAL_TIME
         self.output_path = output_path
-        self.time = 0
         self.inst_index = 0
+        self.time = 0
         self.pending_devices = []
         self.port_to_device: Dict[str, Device] = {}
         self.devices: Dict[str, Device] = {}
         self.hosts: Dict[str, PC] = {}
+    
+    def is_running(self):
+        device_sending = any([(d.sending_bit != EMPTY or d.time_to_send) \
+             for d in self.hosts.values()])
+        return self.instructions or device_sending
 
     def add_device(self, device: Device):
         self.devices[device.name] = device
@@ -39,13 +44,15 @@ class NetSimulation():
             self.port_to_device.pop(port)
         self.devices.pop(dev.name)
         if dev.name in self.hosts.keys():
-            self.hosts.pop(dev.name)
+            self.hosts.pop(dev.name)    
 
     def start(self, instructions):
         self.instructions = instructions
         self.time = 0
-        while self.time < 100:
+        while self.is_running():
             self.update()
+        for d in self.devices.values():
+            d.save_log()
 
     def update(self):
         t = self.time
@@ -59,5 +66,8 @@ class NetSimulation():
 
         for d in self.devices.values():
             d.update(t)
+
+        for d in self.hosts.values():
+            d.recieve()
         
         self.time += 1

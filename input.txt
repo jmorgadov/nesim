@@ -1,6 +1,9 @@
 0 create hub H 4
-0 create host PCA
-0 create host PCB
-0 connect PCA_1 H_1
-0 connect PCB_1 H_2
-0 send PCA 1010
+0 create host PC_1
+0 create host PC_2
+0 connect PC_1_1 H_1
+0 connect PC_2_1 H_2
+0 send PC_1 0000
+3 create host PC_3
+3 connect PC_3_1 H_4
+4 send PC_3 1111
