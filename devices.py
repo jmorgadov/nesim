@@ -7,8 +7,6 @@ EMPTY = -1
 CERO = 0
 ONE = 1
 
-seed(0)
-
 class Cable():
 
     def __init__(self):
