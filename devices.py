@@ -1,28 +1,24 @@
 import abc
 import logging
+from functools import reduce
 from typing import Dict
 from random import randint, seed
 
-EMPTY = -1
 CERO = 0
 ONE = 1
+
+seed(0)
 
 class Cable():
 
     def __init__(self):
-        self.onValueChangedActions = []
         self.value = CERO
-
-    def add_action(self, action):
-        self.onValueChangedActions += [action]
     
     def get_value(self):
         return self.value
 
-    def set_value(self, val, device):
+    def set_value(self, val):
         self.value = val
-        for action in self.onValueChangedActions:
-            action(device)
 
 
 class Device(metaclass=abc.ABCMeta):
@@ -59,22 +55,13 @@ class Hub(Device):
 
         super().__init__(name, ports)
 
-    def retransmit(self, from_port):
-        val = self.ports[from_port].value
-
-        if val != EMPTY:
-            if self.current_transmitting_port is None:
-                self.current_transmitting_port = from_port
-            elif self.current_transmitting_port != from_port:
-                val |= self.ports[self.current_transmitting_port].value
-
-        for port, cable in self.ports.items():
-            if cable is not None and port != from_port:
-                cable.set_value(val, self)
-
     def update(self, time):
-        self.current_transmitting_port = None
-        pass
+        val = reduce(lambda x, y: x|y, \
+        [c.value for c in self.ports.values() if c is not None])
+
+        for _, cable in self.ports.items():
+            if cable is not None:
+                cable.set_value(val)
 
     def connect(self, cable: Cable, port_name: str):
 
@@ -83,15 +70,9 @@ class Hub(Device):
         
         self.ports[port_name] = cable
 
-        def action(device):
-            if device != self and device is not None:
-                self.retransmit(port_name)
-
-        cable.add_action(action)
-
 class PC(Device):
     def __init__(self, name, signal_time):
-        ports = { f'{name}_1' : None }
+        ports = {f'{name}_1' : None}
         super().__init__(name, ports)
         self.data = []
         self.current_package = []
@@ -100,17 +81,14 @@ class PC(Device):
         self.max_time_to_send = 1
         self.signal_time = signal_time
         self.send_time = 0
-        self.sending_bit = EMPTY
+        self.sending_bit = 0
+        self.is_sending = False
         self.logs = []
         self.time_connected = 0
         self.sim_time = 0
 
     def readjust_max_time_to_send(self):
         self.max_time_to_send *= 2
-
-    @property
-    def is_sending(self):
-        return self.sending_bit != EMPTY
 
     @property
     def cable(self):
@@ -124,9 +102,11 @@ class PC(Device):
                 self.max_time_to_send = 8
                 self.package_index = 0
                 self.send_time = 0
-            elif self.sending_bit != EMPTY:
-                self.sending_bit = EMPTY
-                self.cable.set_value(EMPTY, self)
+                self.is_sending = True
+            elif self.is_sending:
+                self.sending_bit = 0
+                self.is_sending = False
+                self.cable.set_value(0)
 
 
     def update(self, time):
@@ -140,9 +120,10 @@ class PC(Device):
             return
         
         if self.current_package:
+            self.is_sending = True
             self.sending_bit = self.current_package[self.package_index]
             # self.log(time, f'Trying to send {self.sending_bit}')
-            self.cable.set_value(self.sending_bit, self)
+            self.cable.set_value(self.sending_bit)
 
             coll = self.check_collision()
 
@@ -153,33 +134,29 @@ class PC(Device):
                 if self.send_time == self.signal_time:
                     self.package_index += 1
                     if self.package_index == len(self.current_package):
-                        self.current_package = []                     
+                        self.current_package = []              
                     self.send_time = 0
-        # if not self.current_package:
-        #     self.sending_bit = EMPTY
 
         self.time_connected += 1
-        
-        # if time % self.signal_time == 0 and not self.is_sending:
-        #     self.log(time, f'recieve {self.cable.value}')
-            
 
     def send(self, data):
         self.data += data
 
     def recieve(self):
-        if self.time_connected % self.signal_time == 0 and \
-           not self.is_sending and \
-           self.cable.value != EMPTY:
+        if self.is_sending:
+            self.check_collision()
+        elif self.time_connected % self.signal_time == 0 and \
+           not self.is_sending:
             self.log(self.sim_time, f'recieve {self.cable.value}')
 
     def check_collision(self):
-        if self.sending_bit != EMPTY and self.cable.value != self.sending_bit: #collision
+        if self.is_sending and self.cable.value != self.sending_bit: #collision
             self.readjust_max_time_to_send()
             self.time_to_send = randint(0, self.max_time_to_send)
             self.log(self.sim_time, f'Collision, waitting {self.time_to_send}ms to send')
             self.package_index = 0
             self.send_time = 0
+            self.is_sending = False
             return True
         return False
 
@@ -189,21 +166,3 @@ class PC(Device):
             raise ValueError(f'Port {port_name} is currently in use.')
 
         self.ports[self.port_name(1)] = cable
-
-        def action(device):
-            if self.sending_bit != EMPTY and \
-               device is not None and \
-               device != self:
-
-                if self.cable.value == EMPTY:
-                    self.cable.set_value(self.sending_bit, self)
-                    return
-
-                val = self.sending_bit | self.cable.value
-                self.cable.set_value(val, None)
-                if self.check_collision():
-                    self.sending_bit = EMPTY
-            
-
-        self.cable.add_action(action)
-

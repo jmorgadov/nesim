@@ -18,7 +18,7 @@ class NetSimulation():
         self.end_delay = self.signal_time
     
     def is_running(self):
-        device_sending = any([(d.sending_bit != EMPTY or d.time_to_send) \
+        device_sending = any([(d.is_sending or d.time_to_send) \
              for d in self.hosts.values()])
         running = self.instructions or device_sending
         if not running:
@@ -32,7 +32,7 @@ class NetSimulation():
             self.hosts[device.name] = device
 
         for port in device.ports.keys():
-            self.port_to_device[port] = device            
+            self.port_to_device[port] = device
 
     def connect(self, port1, port2):
         cab = Cable()
@@ -63,15 +63,21 @@ class NetSimulation():
 
         current_insts = []
         while self.instructions and t == self.instructions[0].time:
-            current_insts.append(self.instructions.pop(0))           
+            current_insts.append(self.instructions.pop(0))
 
         for instr in current_insts:
             instr.execute(self)
 
-        for d in self.devices.values():
-            d.update(t)
 
-        for d in self.hosts.values():
-            d.recieve()
+        for host in self.hosts.values():
+            host.update(t)
+
+        for _ in range(len(self.devices)):
+            for device in self.devices.values():
+                if device not in self.hosts.values():
+                    device.update(t)
+
+        for host in self.hosts.values():
+            host.recieve()
         
         self.time += 1

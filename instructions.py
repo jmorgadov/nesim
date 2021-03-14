@@ -59,4 +59,7 @@ class DisconnectIns(Instruction):
     def __init__(self, time, port_name):
         super().__init__(time)
         self.port_name = port_name
+
+    def execute(self, net_sim: sim.NetSimulation):
+        pass
     
