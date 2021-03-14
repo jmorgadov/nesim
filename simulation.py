@@ -68,6 +68,9 @@ class NetSimulation():
         for instr in current_insts:
             instr.execute(self)
 
+        for device in self.devices.values():
+            if device not in self.hosts.values():
+                device.reset()
 
         for host in self.hosts.values():
             host.update(t)

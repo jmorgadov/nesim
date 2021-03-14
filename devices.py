@@ -30,6 +30,9 @@ class Device(metaclass=abc.ABCMeta):
     def port_name(self, port):
         return f'{self.name}_{port}'
 
+    def reset(self):
+        pass
+
     def update(self, time):
         pass
 
@@ -54,6 +57,11 @@ class Hub(Device):
             ports[f'{name}_{i+1}'] = None
 
         super().__init__(name, ports)
+
+    def reset(self):
+        for _, cable in self.ports.items():
+            if cable is not None:
+                cable.set_value(0)
 
     def update(self, time):
         val = reduce(lambda x, y: x|y, \
