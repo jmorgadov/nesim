@@ -3,6 +3,7 @@ import logging
 from functools import reduce
 from typing import Dict
 from random import randint, seed
+from collections import Counter
 
 CERO = 0
 ONE = 1
@@ -140,6 +141,7 @@ class PC(Device):
         self.logs = []
         self.time_connected = 0
         self.sim_time = 0
+        self.recived_bits = []
 
     def readjust_max_time_to_send(self):
         self.max_time_to_send *= 2
@@ -199,9 +201,13 @@ class PC(Device):
     def receive(self):
         if self.is_sending:
             self.check_collision()
-        elif self.time_connected % self.signal_time == 0 and \
-           not self.is_sending:
-            self.log(self.sim_time, 'Received', f'{self.cable.value}')
+        
+        elif self.time_connected % self.signal_time/3 == 0:
+            self.recived_bits.append(self.cable.value)
+
+        elif self.time_connected % self.signal_time == 0:
+            temp = [(v,k) for k,v in Counter(self.recived_bits).items()]
+            self.log(self.sim_time, 'Received', f'{max(temp)[1]}')
 
     def check_collision(self):
         if self.is_sending and self.cable.value != self.sending_bit: #collision
