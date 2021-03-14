@@ -1,5 +1,5 @@
 from typing import Dict
-from devices import *
+from devices import Device, PC, Cable
 
 SIGNAL_TIME = 10
 

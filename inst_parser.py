@@ -1,4 +1,10 @@
-from instructions import *
+from instructions import (
+    CreateHostIns,
+    CreateHubIns,
+    SendIns,
+    ConnectIns,
+    DisconnectIns
+)
 from typing import List
 
 def parse_single_inst(inst_text: str):
