@@ -57,6 +57,8 @@ class Hub(Device):
 
     def __init__(self, name, ports_count):
         self.current_transmitting_port = None
+        self.updating = False
+        self.received, self.sended = [] , []
         ports = {}
         for i in range(ports_count):
             ports[f'{name}_{i+1}'] = None
@@ -64,17 +66,56 @@ class Hub(Device):
         super().__init__(name, ports)
 
     def reset(self):
+        self.updating = False
         for _, cable in self.ports.items():
             if cable is not None:
                 cable.set_value(0)
+    
+    def save_log(self, path=''):
+        with open(path + f'{self.name}.txt', 'w+') as file:
+            header = f'| {"Time (ms)": ^10} |'
+            for port in self.ports.keys():
+                header += f' {port: ^11} |'
+            header_len = len(header)
+            header += f'\n| {"": ^10} |'
+            for port in self.ports.keys():
+                header += f' {"Rece . Sent": ^11} |'
+            file.write(f'{"-" * header_len}\n')
+            file.write(f'{header}\n')
+            file.write(f'{"-" * header_len}\n')
+            file.write('\n'.join(self.logs))
+            file.write(f'\n{"-" * header_len}\n')
+
+    def special_log(self, time, received, sended):
+        log_msg = f'| {time: ^10} |'
+        for re, se in zip(received, sended):
+            if re == '-':
+                log_msg += f' {"---" : ^11} |'
+            else:
+                log_msg += f' {re :>4} . {se: <4} |'
+        if self.updating:
+            self.logs[-1] = log_msg
+        else:
+            self.logs.append(log_msg)
+
+    def get_port_value(self, port_name):
+        cable = self.ports[port_name]
+        return str(cable.value) if cable is not None else '-'
 
     def update(self, time):
         val = reduce(lambda x, y: x|y, \
         [c.value for c in self.ports.values() if c is not None])
 
+        if not self.updating:
+            self.received = [self.get_port_value(p) for p in self.ports.keys()]        
+
         for _, cable in self.ports.items():
             if cable is not None:
                 cable.set_value(val)
+
+        self.sended = [self.get_port_value(p) for p in self.ports.keys()]
+        self.special_log(time, self.received, self.sended)
+        self.updating = True
 
     def connect(self, cable: Cable, port_name: str):
         if self.ports[port_name] is not None:
@@ -142,7 +183,7 @@ class PC(Device):
 
             if not coll:
                 if self.send_time == 0:                
-                    self.log(self.sim_time, 'Send', f'{self.sending_bit}')
+                    self.log(self.sim_time, 'Sent', f'{self.sending_bit}')
                 self.send_time += 1
                 if self.send_time == self.signal_time:
                     self.package_index += 1
@@ -155,12 +196,12 @@ class PC(Device):
     def send(self, data):
         self.data += data
 
-    def recieve(self):
+    def receive(self):
         if self.is_sending:
             self.check_collision()
         elif self.time_connected % self.signal_time == 0 and \
            not self.is_sending:
-            self.log(self.sim_time, 'Recieve', f'{self.cable.value}')
+            self.log(self.sim_time, 'Received', f'{self.cable.value}')
 
     def check_collision(self):
         if self.is_sending and self.cable.value != self.sending_bit: #collision

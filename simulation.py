@@ -81,6 +81,6 @@ class NetSimulation():
                     device.update(t)
 
         for host in self.hosts.values():
-            host.recieve()
+            host.receive()
         
         self.time += 1
