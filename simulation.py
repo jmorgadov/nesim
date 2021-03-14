@@ -26,6 +26,9 @@ class NetSimulation():
         return self.end_delay > 0
 
     def add_device(self, device: Device):
+        if device.name in self.devices.keys():
+            raise ValueError(f'The device name {device.name} is already taken.')
+
         self.devices[device.name] = device
 
         if isinstance(device, PC):
