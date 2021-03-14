@@ -61,5 +61,5 @@ class DisconnectIns(Instruction):
         self.port_name = port_name
 
     def execute(self, net_sim: sim.NetSimulation):
-        pass
+        net_sim.disconnect(self.port_name)
     
