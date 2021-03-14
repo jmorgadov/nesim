@@ -3,7 +3,7 @@ import inst_parser as prs
 import logging
 
 logging.basicConfig(
-    format='[%(levelname)s] %(message)s',
+    format='%(message)s',
     level=logging.INFO
 )
 
