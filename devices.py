@@ -5,42 +5,92 @@ from typing import Dict
 from random import randint, seed
 from collections import Counter
 
-CERO = 0
-ONE = 1
-
 seed(0)
 
 class Cable():
+    """
+    Representa un cable físico.
+
+    Attributes
+    ----------
+    value : int
+        Valor del bit que se transmite.
+    """
 
     def __init__(self):
-        self.value = CERO
-    
-    def get_value(self):
-        return self.value
-
-    def set_value(self, val):
-        self.value = val
+        self.value = 0
 
 
 class Device(metaclass=abc.ABCMeta):
+    """
+    Representa un dispositivo.
+
+    Parameters
+    ----------
+    name : str
+        Nombre del dispositivo.
+    ports : Dict[str, Cable]
+        Puertos del dispositivo.
+
+        Cada puerto está asociado a un cable. Si para un puerto dado el
+        cable asociado es ```None`` significa que este puerto no tiene ningún
+        cable conectado.    
+    """
+
     def __init__(self, name: str, ports: Dict[str, Cable]):
         self.name = name
         self.ports = ports
         self.logs = []
 
-    def port_name(self, port):
+    def port_name(self, port: int):
+        """
+        Devuelve el nombre de un puerto dado su número.
+
+        Parameters
+        ----------
+        port : int
+            Número del puerto.
+
+            Este valor debe ser mayor o igual a 1 y menor o igual que la
+            cantidad total de puertos del dispositivo.
+        """
         return f'{self.name}_{port}'
 
     def reset(self):
-        pass
+        """
+        Función que se ejecuta al inicio de cada ciclo de simulación para cada
+        dispositivo.
+        """
 
-    def update(self, time):
-        pass
+    @abc.abstractmethod
+    def update(self, time: int):
+        """
+        Función que se ejecuta en el ciclo de la simulación por cada
+        dispositivo.
 
-    def connect(self, cable, port_name):
-        pass
+        Parameters
+        ----------
+        time : int
+            Timepo de ejecución de la simulación.
+        """
 
-    def log(self, time, msg, info):
+    @abc.abstractmethod
+    def connect(self, cable: Cable, port_name: str):
+        """
+        Conecta un cable dado a un puerto determinado.
+
+        Parameters
+        ----------
+        cable : Cable
+            Cable a conectar.
+        port_name : str
+            Nombre del puerto en el que será conectado el cable.
+        """
+
+    def log(self, time: int, msg: str, info: str):
+        """
+        Log
+        """
         log_msg = f'| {time: ^10} | {self.name: ^8} | {msg: ^10} | {info: <30} |'
         self.logs.append(log_msg)
         logging.info(log_msg)
@@ -70,7 +120,7 @@ class Hub(Device):
         self.updating = False
         for _, cable in self.ports.items():
             if cable is not None:
-                cable.set_value(0)
+                cable.value = 0
     
     def save_log(self, path=''):
         with open(path + f'{self.name}.txt', 'w+') as file:
@@ -112,7 +162,7 @@ class Hub(Device):
 
         for _, cable in self.ports.items():
             if cable is not None:
-                cable.set_value(val)
+                cable.value = val
 
         self.sended = [self.get_port_value(p) for p in self.ports.keys()]
         self.special_log(time, self.received, self.sended)
@@ -162,7 +212,7 @@ class PC(Device):
             elif self.is_sending:
                 self.sending_bit = 0
                 self.is_sending = False
-                self.cable.set_value(0)
+                self.cable.value = 0
 
 
     def update(self, time):
@@ -179,7 +229,7 @@ class PC(Device):
             self.is_sending = True
             self.sending_bit = self.current_package[self.package_index]
             # self.log(time, f'Trying to send {self.sending_bit}')
-            self.cable.set_value(self.sending_bit)
+            self.cable.value = self.sending_bit
 
             coll = self.check_collision()
 

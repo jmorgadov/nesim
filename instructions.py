@@ -1,9 +1,12 @@
 import abc
 import simulation as sim
 import devices as dv
+from typing import List
+
+
 class Instruction(metaclass=abc.ABCMeta):
 
-    def __init__(self, time):
+    def __init__(self, time: int):
         self.time = time
 
     @abc.abstractmethod
@@ -13,19 +16,19 @@ class Instruction(metaclass=abc.ABCMeta):
 
 class CreateHubIns(Instruction):
 
-    def __init__(self, time, hub_name, ports):
+    def __init__(self, time: int, hub_name: str, ports_count: int):
         super().__init__(time)
         self.hub_name = hub_name
-        self.ports = ports
+        self.ports_count = ports_count
 
     def execute(self, net_sim: sim.NetSimulation):
-        hub = dv.Hub(self.hub_name, self.ports)
+        hub = dv.Hub(self.hub_name, self.ports_count)
         net_sim.add_device(hub)
 
 
 class CreateHostIns(Instruction):
 
-    def __init__(self, time, host_name):
+    def __init__(self, time: int, host_name: str):
         super().__init__(time)
         self.host_name = host_name
     
@@ -35,7 +38,7 @@ class CreateHostIns(Instruction):
 
 class ConnectIns(Instruction):
 
-    def __init__(self, time, port1, port2):
+    def __init__(self, time: int, port1: str, port2: str):
         super().__init__(time)
         self.port1 = port1
         self.port2 = port2
@@ -46,7 +49,7 @@ class ConnectIns(Instruction):
 
 class SendIns(Instruction):
     
-    def __init__(self, time, host_name, data):
+    def __init__(self, time: int, host_name: str, data: List[int]):
         super().__init__(time)
         self.host_name = host_name
         self.data = data
@@ -55,8 +58,10 @@ class SendIns(Instruction):
         net_sim.send(self.host_name, self.data) 
 
 class DisconnectIns(Instruction):
-
-    def __init__(self, time, port_name):
+    """
+    
+    """
+    def __init__(self, time: int, port_name: str):
         super().__init__(time)
         self.port_name = port_name
 
