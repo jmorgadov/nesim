@@ -96,7 +96,7 @@ Para cargar un archivo de instrucciones se utiliza la función :py:func:`~inst_p
     import nesim
     instr = nesim.load_instructions()
 
-Esta función busca por defecto un archivo ``script.txt`` donde mismo se ejectuta el ``.py``. En caso que se quiera cargar otro archivo podemos especificar la ruta del mismo:
+Esta función busca por defecto un archivo ``script.txt`` donde mismo se ejectuta el ``.py``. En caso que se quiera cargar otro archivo se puede especificar la ruta del mismo:
 
 .. code-block:: python
 
