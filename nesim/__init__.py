@@ -1,6 +1,6 @@
-from netsim.simulation import NetSimulation, SIGNAL_TIME
-from netsim.inst_parser import parse_instructions
-from netsim.instructions import (
+from nesim.simulation import NetSimulation, SIGNAL_TIME
+from nesim.inst_parser import parse_instructions
+from nesim.instructions import (
     Instruction,
     CreateHubIns,
     CreateHostIns,
@@ -8,7 +8,7 @@ from netsim.instructions import (
     SendIns,
     DisconnectIns
 )
-from netsim.devices import (
+from nesim.devices import (
     Cable,
     Device,
     Hub,

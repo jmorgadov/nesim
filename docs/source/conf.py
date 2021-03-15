@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'NetSim'
+project = 'nesim'
 copyright = '2021, Jorge Morgado, Roberto García'
 author = 'Jorge Morgado, Roberto García'
 

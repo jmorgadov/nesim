@@ -1,4 +1,4 @@
-import netsim
+import nesim
 
 if __name__ == '__main__':
     raw_instr = [
@@ -9,6 +9,6 @@ if __name__ == '__main__':
         '0 connect PCB_1 H_2',
         '0 send PCA 00110101'
     ]
-    instr = netsim.parse_instructions(raw_instr)
-    sim = netsim.NetSimulation()
+    instr = nesim.parse_instructions(raw_instr)
+    sim = nesim.NetSimulation()
     sim.start(instr)

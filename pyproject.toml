@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "NetSim"
+name = "nesim"
 version = "0.0.1"
 description = "Paquete de python que permite simular de una red de computadoras."
 authors = [
@@ -8,8 +8,8 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/jmorgadov/netsim"
-repository = "https://github.com/jmorgadov/netsim"
+homepage = "https://github.com/jmorgadov/nesim"
+repository = "https://github.com/jmorgadov/nesim"
 
 [tool.poetry.dependencies]
 python = "^3.7"

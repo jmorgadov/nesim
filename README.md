@@ -1,8 +1,8 @@
 # NetSim
 
-## ¿Qué es NetSim?
+## ¿Qué es nesim?
 
-NetSim es un paquete de python el cual permite simular de una red de computadoras.
+Nesim es un paquete de python el cual permite simular de una red de computadoras.
 
 ## Autores
 
