@@ -1,6 +1,7 @@
 import abc
 import logging
 from functools import reduce
+from pathlib import Path
 from typing import Dict, List
 from random import randint, seed
 from collections import Counter
@@ -149,8 +150,11 @@ class Device(metaclass=abc.ABCMeta):
         path : str
             Ruta donde se guardarán los logs. (Por defecto en la raíz)
         """
-
-        with open(path + f'{self.name}.txt', 'w+') as file:
+        
+        output_folder = Path(path)
+        output_folder.mkdir(parents=True, exist_ok=True)        
+        output_path = output_folder / Path(f'{self.name}.txt')
+        with open(str(output_path), 'w+') as file:
             header = f'| {"Time (ms)": ^10} | {"Device":^12} | {"Action" :^14} | {"Info": ^30} |'
             file.write(f'{"-" * len(header)}\n')
             file.write(f'{header}\n')
@@ -187,7 +191,10 @@ class Hub(Device):
                 cable.value = 0
 
     def save_log(self, path=''):
-        with open(path + f'{self.name}.txt', 'w+') as file:
+        output_folder = Path(path)
+        output_folder.mkdir(parents=True, exist_ok=True)        
+        output_path = output_folder / Path(f'{self.name}.txt')
+        with open(str(output_path), 'w+') as file:
             header = f'| {"Time (ms)": ^10} |'
             for port in self.ports.keys():
                 header += f' {port: ^11} |'
