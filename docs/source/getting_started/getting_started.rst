@@ -123,6 +123,16 @@ Para ejecutar esta simulación solo es necesario llamar al método :py:func:`~si
 
     sim.start(instr)
 
+Timepo de señal
+---------------
+
+El tiempo de señal (``signal_time``) define cuantos milisegundos debe estar en transmisión cada bit que se va a enviar. Por defecto su valor es 10 pero el mismo puede ser configurado como se muestra en la siguente sección.
+
+Archivo de configuración
+------------------------
+
+Al comenzar una simulación se carga un archivo llamado ``config.txt`` (En caso de no existir se crea uno por defecto). Este archivo contiene la configuración básica para las simulaciones. Cada línea de este archivo contiene un par (``key`` ``value``) donde cada llave representa el nombre de uno de los parámetros a configurar y a su lado el valor correspondiente. Por ahora el único parámetro a configurar es el ``signal_time`` cuyo valor por defecto es 10.
+
 Logs
 ----
 

@@ -295,7 +295,7 @@ class PC(Device):
             if self.data:
                 self.current_package = self.data[:8]
                 self.data = self.data[8:]
-                self.max_time_to_send = 8
+                self.max_time_to_send = 16
                 self.package_index = 0
                 self.send_time = 0
                 self.is_sending = True
@@ -378,8 +378,8 @@ class PC(Device):
             ``True`` si hubo colisión, ``False`` en caso contrario.
         """
         if self.is_sending and self.cable.value != self.sending_bit:
+            self.time_to_send = randint(1, self.max_time_to_send)
             self.readjust_max_time_to_send()
-            self.time_to_send = randint(0, self.max_time_to_send)
             self.log(self.sim_time,
                      'Collision',
                      f'Waitting {self.time_to_send}ms to send')
