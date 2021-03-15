@@ -72,6 +72,12 @@ class NetSimulation():
             Nombres de los puertos a conectar.
         """
 
+        if port1 not in self.port_to_device.keys():
+            raise ValueError(f'Unknown port {port1}')
+
+        if port2 not in self.port_to_device.keys():
+            raise ValueError(f'Unknown port {port2}')
+
         cab = Cable()
         self.port_to_device[port1].connect(cab, port1)
         self.port_to_device[port2].connect(cab, port2)
@@ -87,6 +93,10 @@ class NetSimulation():
         data : List[int]
             Datos a enviar.
         """
+
+        if host_name not in self.hosts.keys():
+            raise ValueError(f'Unknown host {host_name}')
+
         self.hosts[host_name].send(data)
 
     def disconnect(self, port: str):
@@ -98,6 +108,9 @@ class NetSimulation():
         port : str
             Puerto a desconectar.
         """
+
+        if port not in self.port_to_device.keys():
+            raise ValueError(f'Unknown port {port}')
 
         dev = self.port_to_device[port]
         for port in dev.ports.keys():
