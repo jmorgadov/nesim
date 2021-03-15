@@ -1,8 +1,6 @@
 from typing import Dict, List
 from nesim.devices import Device, PC, Cable
-
-SIGNAL_TIME = 10
-"""Timepo mínimo en el que un bit debe estar en transmisión"""
+import nesim.utils as utils
 
 
 class NetSimulation():
@@ -17,8 +15,9 @@ class NetSimulation():
     """
 
     def __init__(self, output_path: str = '.'):
+        utils.check_config()
         self.instructions = []
-        self.signal_time = SIGNAL_TIME
+        self.signal_time = utils.CONFIG['signal_time']
         self.output_path = output_path
         self.inst_index = 0
         self.time = 0
@@ -50,7 +49,7 @@ class NetSimulation():
         device : Device
             Dispositivo a añadir.
         """
-        
+
         if device.name in self.devices.keys():
             raise ValueError(f'The device name {device.name} is already taken.')
 

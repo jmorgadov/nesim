@@ -1,4 +1,4 @@
-from nesim.simulation import NetSimulation, SIGNAL_TIME
+from nesim.simulation import NetSimulation
 from nesim.inst_parser import parse_instructions
 from nesim.instructions import (
     Instruction,
@@ -15,6 +15,7 @@ from nesim.devices import (
     PC
 )
 import logging
+from pathlib import Path
 
 logging.basicConfig(
     format='%(message)s',
@@ -24,7 +25,6 @@ logging.basicConfig(
 __version__ = '0.0.1'
 
 __all__ = [
-    'SIGNAL_TIME',
     'parse_instructions',
     'NetSimulation',
     'Instruction',
