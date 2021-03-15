@@ -7,6 +7,7 @@ Instalación
 -----------
 
 Tan simple como:
+
 >>> pip install nesim
 
 Autores
