@@ -89,6 +89,8 @@ class NetSimulation():
             self.disconnected_devices.pop(dev2.name)
             self.add_device(dev2)
 
+        dev1.sim_time = self.time
+        dev2.sim_time = self.time
         self.port_to_device[port1].connect(cab, port1)
         self.port_to_device[port2].connect(cab, port2)
 
