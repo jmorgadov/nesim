@@ -11,10 +11,10 @@ class NetSimulation():
     ----------
     output_path : str
         Ruta donde se guardarán los logs de la simulación al finalizar.
-        la misma.
+        la misma. (Por defecto es ``output``).
     """
 
-    def __init__(self, output_path: str = '.'):
+    def __init__(self, output_path: str = 'output'):
         utils.check_config()
         self.instructions = []
         self.signal_time = utils.CONFIG['signal_time']
@@ -152,7 +152,7 @@ class NetSimulation():
         while self.is_running:
             self.update()
         for device in self.devices.values():
-            device.save_log()
+            device.save_log(self.output_path)
 
     def update(self):
         """
