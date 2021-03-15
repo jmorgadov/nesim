@@ -134,3 +134,6 @@ dmypy.json
 
 # poetry
 poetry.lock
+
+# locals
+locals/
