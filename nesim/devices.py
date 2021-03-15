@@ -132,7 +132,7 @@ class Device(metaclass=abc.ABCMeta):
         """
 
         with open(path + f'{self.name}.txt', 'w+') as file:
-            header = f'| {"Time (ms)": ^10} | {"Port":^8} | {"Action" :^10} | {"Info": ^30} |'
+            header = f'| {"Time (ms)": ^10} | {"Device":^8} | {"Action" :^10} | {"Info": ^30} |'
             file.write(f'{"-" * len(header)}\n')
             file.write(f'{header}\n')
             file.write(f'{"-" * len(header)}\n')

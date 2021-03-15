@@ -143,7 +143,7 @@ Por ejemplo, al ejecuar la simulación anterior los logs del host ``PCA`` que se
 .. code-block:: text
 
     -----------------------------------------------------------------------
-    | Time (ms)  |   Port   |   Action   |              Info              |
+    | Time (ms)  |  Device  |   Action   |              Info              |
     -----------------------------------------------------------------------
     |     0      |   PCA    |    Sent    | 0                              |
     |     10     |   PCA    |    Sent    | 1                              |
