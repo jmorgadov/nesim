@@ -7,7 +7,7 @@ from instructions import (
 )
 from typing import List
 
-def parse_single_inst(inst_text: str):
+def _parse_single_inst(inst_text: str):
 
     temp_line = inst_text.split()
     inst_time = int(temp_line[0])
@@ -37,4 +37,17 @@ def parse_single_inst(inst_text: str):
         return DisconnectIns(inst_time, port_name)
 
 def parse_instructions(instr_lines: List[str]):
-    return [parse_single_inst(line) for line in instr_lines]
+    """
+    Parsea una lista de instrucciones.
+
+    Parameters
+    ----------
+    instr_lines : List[str]
+        Lista de instrucciones en modo de texto.
+
+    Returns
+    -------
+    List[Instruction]
+        Lista de instrucciones.
+    """
+    return [_parse_single_inst(line) for line in instr_lines]

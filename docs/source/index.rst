@@ -8,7 +8,7 @@ Bienvenido a la documentación de NetSim!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contenidos:
 
    about/about
    api_ref/api_ref
