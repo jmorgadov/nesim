@@ -1,11 +1,13 @@
 [tool.poetry]
 name = "NetSim"
 version = "0.0.1"
-description = ""
+description = "Paquete de python que permite simular de una red de computadoras."
 authors = [
     "Jorge Morgado Vega <jorge.morgadov@gmail.com>",
     "Roberto García Rodríguez <roberto.garcia@estudiantes.matcom.uh.cu>"
 ]
+license = "MIT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.7"
