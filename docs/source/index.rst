@@ -15,7 +15,7 @@ Bienvenido a la documentación de NetSim!
 
 
 
-Indices and tables
+Indices y Búsqueda
 ==================
 
 * :ref:`genindex`

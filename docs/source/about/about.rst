@@ -7,7 +7,7 @@ Autores
 -------
 
 * Jorge Morgado Vega <jorge.morgadov@gmail.com>
-* Roberto García Rodrígez <roberto.garcía@estudiantes.matcom.uh.cu>
+* Roberto García Rodrígez <roberto.garcia@estudiantes.matcom.uh.cu>
 
 
 

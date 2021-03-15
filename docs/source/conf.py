@@ -38,7 +38,7 @@ extensions = [
 ]
 autodoc_typehints = 'description'
 add_module_names = False
-
+language = 'es'
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
