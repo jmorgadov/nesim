@@ -16,7 +16,7 @@ class NetSimulation():
         la misma.
     """
 
-    def __init__(self, output_path:str = '.'):
+    def __init__(self, output_path: str = '.'):
         self.instructions = []
         self.signal_time = SIGNAL_TIME
         self.output_path = output_path
