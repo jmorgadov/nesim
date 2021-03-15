@@ -1,4 +1,4 @@
-# NetSim
+# nesim
 
 ## ¿Qué es nesim?
 
