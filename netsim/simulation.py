@@ -1,5 +1,5 @@
 from typing import Dict, List
-from devices import Device, PC, Cable
+from netsim.devices import Device, PC, Cable
 
 SIGNAL_TIME = 10
 """Timepo mínimo en el que un bit debe estar en transmisión"""

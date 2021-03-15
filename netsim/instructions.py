@@ -1,6 +1,6 @@
 import abc
-import simulation as sim
-import devices as dv
+import netsim.simulation as sim
+import netsim.devices as dv
 from typing import List
 
 
