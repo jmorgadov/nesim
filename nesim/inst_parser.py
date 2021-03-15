@@ -6,6 +6,7 @@ from nesim.instructions import (
     DisconnectIns
 )
 from typing import List
+from pathlib import Path
 
 def _parse_single_inst(inst_text: str):
 
@@ -51,3 +52,32 @@ def parse_instructions(instr_lines: List[str]):
         Lista de instrucciones.
     """
     return [_parse_single_inst(line) for line in instr_lines]
+
+def load_instruccions(inst_path: str = './script.txt'):
+    """
+    Carga una serie de instrucciones de un archivo.
+
+    Parameters
+    ----------
+    inst_path : str
+        Ruta del archivo que contiene las instrucciones.
+
+    Returns
+    -------
+    List[Instruction]
+        Lista de instrucciones cargadas del archivo.
+    
+    Raises
+    ------
+    ValueError
+        Si la ruta del archivo es inválida.
+    """
+    print('asd')
+    path = Path(inst_path)
+    if path.exists():
+        raw_inst = []
+        with open(str(path), 'r') as file:
+            raw_inst = file.readlines()
+        return parse_instructions(raw_inst)
+    else:
+        raise ValueError(f"Invalid path '{inst_path}'")

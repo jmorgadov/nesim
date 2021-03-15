@@ -2,10 +2,6 @@
 
 import nesim
 
-raw_instr = []
-with open('script.txt', 'r') as file:
-    raw_instr = file.readlines()
-
-instr = nesim.parse_instructions(raw_instr)
+instr = nesim.load_instruccions()
 sim = nesim.NetSimulation()
 sim.start(instr)
