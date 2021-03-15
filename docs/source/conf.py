@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'net_sim'
+project = 'NetSim'
 copyright = '2021, Jorge Morgado, Roberto García'
 author = 'Jorge Morgado, Roberto García'
 
@@ -37,6 +37,8 @@ extensions = [
     # 'numpydoc',
     'sphinx_rtd_theme'
 ]
+autodoc_typehints = 'description'
+add_module_names = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
