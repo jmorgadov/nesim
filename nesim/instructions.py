@@ -73,7 +73,7 @@ class CreateHostIns(Instruction):
         self.host_name = host_name
     
     def execute(self, net_sim: sim.NetSimulation):
-        host = dv.PC(self.host_name, sim.SIGNAL_TIME)
+        host = dv.PC(self.host_name, net_sim.signal_time)
         net_sim.add_device(host)
 
 

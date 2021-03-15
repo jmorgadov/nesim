@@ -137,7 +137,7 @@ class Device(metaclass=abc.ABCMeta):
             file.write(f'{header}\n')
             file.write(f'{"-" * len(header)}\n')
             file.write('\n'.join(self.logs))
-            file.write(f'{"-" * len(header)}\n')
+            file.write(f'\n{"-" * len(header)}\n')
 
 class Hub(Device):
     """
