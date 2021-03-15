@@ -1,6 +1,6 @@
 # nesim
 
-Nesim es un paquete de python diseñado para simular una red de computadoras.
+Paquete de python diseñado para simular una red de computadoras.
 
 ## Instalación
 
