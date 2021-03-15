@@ -2,6 +2,6 @@
 
 import nesim
 
-instr = nesim.load_instruccions()
+instr = nesim.load_instructions()
 sim = nesim.NetSimulation()
 sim.start(instr)

@@ -1,4 +1,4 @@
-Cómo funciona **nesim**
+Cómo utilizar **nesim**
 =======================
 
 Por ahora **nesim** solo puede simular la capa física de una red de computadoras (en próximos *releases* se irán agregando las siguientes capas de la red). Se pueden crear *hubs* y *hosts*, conectarlos entre sí y enviar y recibir información entre los *hosts*.
@@ -72,3 +72,76 @@ Desconectar
 * `port` : Puerto a desconectar.
 
 Ejemplo: ``0 disconnect PC_1``
+
+Cargar instrucciones
+--------------------
+
+Estas instrucciones pueden ser cargadas desde un archivo de texto como el que se muestra a continuación:
+
+.. code-block:: text
+
+    0 create hub H 4
+    0 create host PCA
+    0 create host PCB
+    0 connect PCA_1 H_1
+    0 connect PCB_1 H_2
+    0 send PCA 01110101
+
+En este ejemplo se crea un `hub` (``H``) y dos `hosts` (``PCA``, ``PCB``), luego se conecta cada puerto de cada host a diferentes puertos del hub (los puertos ``PCA_1`` y ``PCB_1`` con ``H_1`` y ``H_2`` respectivamente). Finalmente se ordena al host ``PCA`` a enviar los bits ``01110101``.
+
+Para cargar un archivo de instrucciones se utiliza la función :py:func:`~inst_parser.load_instructions`:
+
+.. code-block:: python
+
+    import nesim
+    instr = nesim.load_instructions()
+
+Esta función busca por defecto un archivo ``script.txt`` donde mismo se ejectuta el ``.py``. En caso que se quiera cargar otro archivo podemos especificar la ruta del mismo:
+
+.. code-block:: python
+
+    instr = nesim.load_instructions('path/of/instructions/file.txt')
+
+Crear y ejecutar una simulación
+-------------------------------
+
+Una vez cargada las instrucciones crear una simulación es tán sencillo como:
+
+.. code-block:: python
+
+    sim = nesim.NetSimulation()
+
+Al crearla también se puede especificar la ruta donde serán guardados los logs (por default en la raíz donde se ejecute el ``.py``):
+
+.. code-block:: python
+
+    sim = nesim.NetSimulation('logs/folder/path')
+
+Para ejecutar esta simulación solo es necesario llamar al método :py:func:`~simulation.NetSimulation.start` dándole las instrucciones a ejecutar:
+
+.. code-block:: python
+
+    sim.start(instr)
+
+Logs
+----
+
+Al finalizar la ejecución de la simulación queda guardado por cada dispositivo un archivo `.txt` con los logs de cada uno respectivamente.
+
+Por ejemplo, al ejecuar la simulación anterior los logs del host ``PCA`` que se guardan en ``PCA.txt`` son:
+
+.. code-block:: text
+
+    -----------------------------------------------------------------------
+    | Time (ms)  |   Port   |   Action   |              Info              |
+    -----------------------------------------------------------------------
+    |     0      |   PCA    |    Sent    | 0                              |
+    |     10     |   PCA    |    Sent    | 1                              |
+    |     20     |   PCA    |    Sent    | 1                              |
+    |     30     |   PCA    |    Sent    | 1                              |
+    |     40     |   PCA    |    Sent    | 0                              |
+    |     50     |   PCA    |    Sent    | 1                              |
+    |     60     |   PCA    |    Sent    | 0                              |
+    |     70     |   PCA    |    Sent    | 1                              |
+    |     89     |   PCA    |  Received  | 0                              |
+    -----------------------------------------------------------------------

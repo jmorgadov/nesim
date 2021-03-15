@@ -12,6 +12,7 @@ Bienvenido a la documentación de nesim!
 
    about/about
    getting_started/getting_started
+   how_it_works/how_it_works
    api_ref/api_ref
 
 

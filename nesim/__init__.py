@@ -1,5 +1,5 @@
 from nesim.simulation import NetSimulation
-from nesim.inst_parser import parse_instructions, load_instruccions
+from nesim.inst_parser import parse_instructions, load_instructions
 from nesim.instructions import (
     Instruction,
     CreateHubIns,
@@ -26,7 +26,7 @@ __version__ = '0.0.1'
 
 __all__ = [
     'parse_instructions',
-    'load_instruccions',
+    'load_instructions',
     'NetSimulation',
     'Instruction',
     'CreateHubIns',

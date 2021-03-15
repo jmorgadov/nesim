@@ -53,7 +53,7 @@ def parse_instructions(instr_lines: List[str]):
     """
     return [_parse_single_inst(line) for line in instr_lines]
 
-def load_instruccions(inst_path: str = './script.txt'):
+def load_instructions(inst_path: str = './script.txt'):
     """
     Carga una serie de instrucciones de un archivo.
 
