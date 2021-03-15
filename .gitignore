@@ -131,3 +131,6 @@ dmypy.json
 # code editor
 .vscode
 *[!script].txt
+
+# poetry
+poetry.lock

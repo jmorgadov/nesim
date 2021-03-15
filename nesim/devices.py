@@ -48,12 +48,17 @@ class Device(metaclass=abc.ABCMeta):
         cable conectado.
     logs : List[str]
         Logs del dispositivo.
+    sim_time : int
+        Timepo de ejecución de la simulación.
+
+        Este valor se actualiza en cada llamado a la función ``update``.
     """
 
     def __init__(self, name: str, ports: Dict[str, Cable]):
         self.name = name
         self.ports = ports
         self.logs = []
+        self.sim_time = 0
 
     def port_name(self, port: int):
         """
@@ -75,7 +80,6 @@ class Device(metaclass=abc.ABCMeta):
         dispositivo.
         """
 
-    @abc.abstractmethod
     def update(self, time: int):
         """
         Función que se ejecuta en el ciclo de la simulación por cada
@@ -86,6 +90,8 @@ class Device(metaclass=abc.ABCMeta):
         time : int
             Timepo de ejecución de la simulación.
         """
+
+        self.sim_time = time
 
     @abc.abstractmethod
     def connect(self, cable: Cable, port_name: str):
@@ -100,7 +106,20 @@ class Device(metaclass=abc.ABCMeta):
             Nombre del puerto en el que será conectado el cable.
         """
 
-    def log(self, time: int, msg: str, info: str):
+    def disconnect(self, port_name: str):
+        """
+        Desconecta un puerto de un dispositivo.
+
+        Parameters
+        ----------
+        port_name : str
+            Nombre del puerto a desconectar.
+        """
+
+        self.ports[port_name] = None
+
+
+    def log(self, time: int, msg: str, info: str = ''):
         """
         Escribe un log en el dispositivo.
 
@@ -117,7 +136,7 @@ class Device(metaclass=abc.ABCMeta):
             Información adicional.
         """
 
-        log_msg = f'| {time: ^10} | {self.name: ^8} | {msg: ^10} | {info: <30} |'
+        log_msg = f'| {time: ^10} | {self.name: ^12} | {msg: ^14} | {info: <30} |'
         self.logs.append(log_msg)
         logging.info(log_msg)
 
@@ -132,7 +151,7 @@ class Device(metaclass=abc.ABCMeta):
         """
 
         with open(path + f'{self.name}.txt', 'w+') as file:
-            header = f'| {"Time (ms)": ^10} | {"Device":^8} | {"Action" :^10} | {"Info": ^30} |'
+            header = f'| {"Time (ms)": ^10} | {"Device":^12} | {"Action" :^14} | {"Info": ^30} |'
             file.write(f'{"-" * len(header)}\n')
             file.write(f'{header}\n')
             file.write(f'{"-" * len(header)}\n')
@@ -221,6 +240,7 @@ class Hub(Device):
         return str(cable.value) if cable is not None else '-'
 
     def update(self, time):
+        super().update(time)
         val = reduce(lambda x, y: x|y, \
         [c.value for c in self.ports.values() if c is not None])
 
@@ -240,6 +260,9 @@ class Hub(Device):
             raise ValueError(f'Port {port_name} is currently in use.')
 
         self.ports[port_name] = cable
+
+    def disconnect(self, port_name: str):
+        return super().disconnect(port_name)
 
 
 class PC(Device):
@@ -272,7 +295,6 @@ class PC(Device):
         self.sending_bit = 0
         self.is_sending = False
         self.time_connected = 0
-        self.sim_time = 0
         self.recived_bits = []
 
     def readjust_max_time_to_send(self):
@@ -286,6 +308,11 @@ class PC(Device):
     def cable(self):
         """Cable : Cable conectado a la PC"""
         return self.ports[self.port_name(1)]
+    
+    @property
+    def is_connected(self):
+        """bool : Estado de conección del host"""
+        return self.cable is not None
 
     def load_package(self):
         """
@@ -306,7 +333,8 @@ class PC(Device):
 
 
     def update(self, time):
-        self.sim_time = time
+        super().update(time)
+
         self.load_package()
 
         if self.time_to_send:
@@ -360,6 +388,9 @@ class PC(Device):
         if self.is_sending:
             self.check_collision()
 
+        if self.is_sending:
+            return
+
         elif self.time_connected % self.signal_time//3 == 0:
             self.recived_bits.append(self.cable.value)
 
@@ -394,3 +425,17 @@ class PC(Device):
             raise ValueError(f'Port {port_name} is currently in use.')
 
         self.ports[self.port_name(1)] = cable
+        self.log(self.sim_time, 'Connected')
+
+    def disconnect(self, port_name: str):
+        self.data = self.current_package + self.data
+        self.current_package = []
+        self.package_index = 0
+        self.is_sending = False
+        self.send_time = 0
+        self.sending_bit = 0
+        self.max_time_to_send = 16
+        self.time_connected = 0
+        self.recived_bits = []
+        super().disconnect(port_name)
+        self.log(self.sim_time, 'Disconnected')
