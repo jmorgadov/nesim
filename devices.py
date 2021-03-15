@@ -1,7 +1,7 @@
 import abc
 import logging
 from functools import reduce
-from typing import Dict
+from typing import Dict, List
 from random import randint, seed
 from collections import Counter
 
@@ -33,8 +33,21 @@ class Device(metaclass=abc.ABCMeta):
         Puertos del dispositivo.
 
         Cada puerto está asociado a un cable. Si para un puerto dado el
+        cable asociado es ``None`` significa que este puerto no tiene ningún
+        cable conectado.
+    
+    Attributes
+    ----------
+    name : str
+        Nombre del dispositivo.
+    ports : Dict[str, Cable]
+        Puertos del dispositivo.
+
+        Cada puerto está asociado a un cable. Si para un puerto dado el
         cable asociado es ```None`` significa que este puerto no tiene ningún
-        cable conectado.    
+        cable conectado.
+    logs : List[str]
+        Logs del dispositivo.
     """
 
     def __init__(self, name: str, ports: Dict[str, Cable]):
@@ -89,13 +102,35 @@ class Device(metaclass=abc.ABCMeta):
 
     def log(self, time: int, msg: str, info: str):
         """
-        Log
+        Escribe un log en el dispositivo.
+
+        Los logs de cada dispositivo se guardarán en archivos separados
+        al finalizar la simulación.
+
+        Parameters
+        ----------
+        time : int
+            Timepo de ejecución de la simulación.
+        msg : str
+            Mensaje que guardará.
+        info : str
+            Información adicional.
         """
+
         log_msg = f'| {time: ^10} | {self.name: ^8} | {msg: ^10} | {info: <30} |'
         self.logs.append(log_msg)
         logging.info(log_msg)
 
-    def save_log(self, path=''):
+    def save_log(self, path: str = ''):
+        """
+        Guarda los logs del dispositivo en una ruta dada.
+
+        Parameters
+        ----------
+        path : str
+            Ruta donde se guardarán los logs. (Por defecto en la raíz)
+        """
+
         with open(path + f'{self.name}.txt', 'w+') as file:
             header = f'| {"Time (ms)": ^10} | {"Port":^8} | {"Action" :^10} | {"Info": ^30} |'
             file.write(f'{"-" * len(header)}\n')
@@ -105,11 +140,21 @@ class Device(metaclass=abc.ABCMeta):
             file.write(f'{"-" * len(header)}\n')
 
 class Hub(Device):
+    """
+    Representa un Hub en la simulación.
 
-    def __init__(self, name, ports_count):
+    Parameters
+    ----------
+    name : str
+        Nombre del hub.
+    ports_count : int
+        Cantidad de puertos del hub.
+    """
+
+    def __init__(self, name: str, ports_count: int):
         self.current_transmitting_port = None
-        self.updating = False
-        self.received, self.sended = [] , []
+        self._updating = False
+        self._received, self._sent = [], []
         ports = {}
         for i in range(ports_count):
             ports[f'{name}_{i+1}'] = None
@@ -117,11 +162,11 @@ class Hub(Device):
         super().__init__(name, ports)
 
     def reset(self):
-        self.updating = False
+        self._updating = False
         for _, cable in self.ports.items():
             if cable is not None:
                 cable.value = 0
-    
+
     def save_log(self, path=''):
         with open(path + f'{self.name}.txt', 'w+') as file:
             header = f'| {"Time (ms)": ^10} |'
@@ -137,19 +182,41 @@ class Hub(Device):
             file.write('\n'.join(self.logs))
             file.write(f'\n{"-" * header_len}\n')
 
-    def special_log(self, time, received, sended):
+    def special_log(self, time: int, received: List[int], sent: List[int]):
+        """
+        Representación especial para los logs de los hubs.
+
+        Parameters
+        ----------
+        time : int
+            Timepo de ejecución de la simulación.
+        received : List[int]
+            Lista de bits recibidos por cada puerto.        
+        sent : List[int]
+            Lista de bits enviados por cada puerto.
+        """
+
         log_msg = f'| {time: ^10} |'
-        for re, se in zip(received, sended):
+        for re, se in zip(received, sent):
             if re == '-':
                 log_msg += f' {"---" : ^11} |'
             else:
                 log_msg += f' {re :>4} . {se: <4} |'
-        if self.updating:
+        if self._updating:
             self.logs[-1] = log_msg
         else:
             self.logs.append(log_msg)
 
-    def get_port_value(self, port_name):
+    def get_port_value(self, port_name: str):
+        """
+        Devuelve el valor del cable conectado a un puerto dado. En caso de no
+        tener un cable conectado devuelve ``'-'``.
+
+        Parameters
+        ----------
+        port_name : str
+            Nombre del puerto.
+        """
         cable = self.ports[port_name]
         return str(cable.value) if cable is not None else '-'
 
@@ -157,50 +224,73 @@ class Hub(Device):
         val = reduce(lambda x, y: x|y, \
         [c.value for c in self.ports.values() if c is not None])
 
-        if not self.updating:
-            self.received = [self.get_port_value(p) for p in self.ports.keys()]        
+        if not self._updating:
+            self._received = [self.get_port_value(p) for p in self.ports.keys()]        
 
         for _, cable in self.ports.items():
             if cable is not None:
                 cable.value = val
 
-        self.sended = [self.get_port_value(p) for p in self.ports.keys()]
-        self.special_log(time, self.received, self.sended)
-        self.updating = True
+        self._sent = [self.get_port_value(p) for p in self.ports.keys()]
+        self.special_log(time, self._received, self._sent)
+        self._updating = True
 
     def connect(self, cable: Cable, port_name: str):
         if self.ports[port_name] is not None:
             raise ValueError(f'Port {port_name} is currently in use.')
-        
+
         self.ports[port_name] = cable
 
 
 class PC(Device):
-    def __init__(self, name, signal_time):
+    """
+    Representa una PC (Host).
+
+    Parameters
+    ----------
+    name : str
+        Nombre de la PC.
+    signal_time : int
+        Tiempo mínimo que debe estar un bit en transmisión.
+
+    Attributes
+    ----------
+    data : List[int]
+        Datos que debe enviar la PC.
+    """
+
+    def __init__(self, name: str, signal_time: int):
         ports = {f'{name}_1' : None}
         super().__init__(name, ports)
+        self.signal_time = signal_time
         self.data = []
         self.current_package = []
         self.package_index = 0
         self.time_to_send = 0
         self.max_time_to_send = 1
-        self.signal_time = signal_time
         self.send_time = 0
         self.sending_bit = 0
         self.is_sending = False
-        self.logs = []
         self.time_connected = 0
         self.sim_time = 0
         self.recived_bits = []
 
     def readjust_max_time_to_send(self):
+        """
+        Ajusta el tiempo máximo que será utilizado en la selección aleatoria
+        de cuanto tiempo debe esperar para reintentar un envío.
+        """
         self.max_time_to_send *= 2
 
     @property
     def cable(self):
+        """Cable : Cable conectado a la PC"""
         return self.ports[self.port_name(1)]
 
     def load_package(self):
+        """
+        Carga el próximo paquete a enviar si hay datos.
+        """
         if not self.current_package:
             if self.data:
                 self.current_package = self.data[:8]
@@ -245,10 +335,28 @@ class PC(Device):
 
         self.time_connected += 1
 
-    def send(self, data):
+    def send(self, data: List[int]):
+        """
+        Agrega nuevos datos para ser enviados a la lista de datos.
+
+        Parameters
+        ----------
+        data : List[int]
+            Datos a ser enviados.
+        """
         self.data += data
 
     def receive(self):
+        """
+        Lee del cable al que está conectado.
+
+        Si la PC se encuentra enviando infromación entonces comprueba que no
+        haya colisión.
+
+        En caso contrario almacena la lectura del cable en varios ocaciones
+        entre un ``SIGNAL_TIME`` y el siguiente. Al concluir el ``SIGNAL_TIME``
+        se guarda como lectura final la moda de los datos almacenados.
+        """
         if self.is_sending:
             self.check_collision()
         
@@ -260,10 +368,20 @@ class PC(Device):
             self.log(self.sim_time, 'Received', f'{max(temp)[1]}')
 
     def check_collision(self):
-        if self.is_sending and self.cable.value != self.sending_bit: #collision
+        """
+        Comprueba si existe una colisión.
+
+        Returns
+        -------
+        bool
+            ``True`` si hubo colisión, ``False`` en caso contrario.
+        """
+        if self.is_sending and self.cable.value != self.sending_bit:
             self.readjust_max_time_to_send()
             self.time_to_send = randint(0, self.max_time_to_send)
-            self.log(self.sim_time, 'Collision', f'Waitting {self.time_to_send}ms to send')
+            self.log(self.sim_time,
+                     'Collision',
+                     f'Waitting {self.time_to_send}ms to send')
             self.package_index = 0
             self.send_time = 0
             self.is_sending = False
@@ -271,7 +389,6 @@ class PC(Device):
         return False
 
     def connect(self, cable: Cable, port_name: str):
-
         if self.cable is not None:
             raise ValueError(f'Port {port_name} is currently in use.')
 

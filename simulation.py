@@ -80,8 +80,8 @@ class NetSimulation():
         """
         Ordena a un host a enviar una serie de datos determinada.
 
-        Paramenters
-        -----------
+        Parameters
+        ----------
         host_name : str
             Nombre del host que enviará la información.
         data : List[int]
