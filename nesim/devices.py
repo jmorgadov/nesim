@@ -100,6 +100,18 @@ class Device(metaclass=abc.ABCMeta):
             Nombre del puerto en el que será conectado el cable.
         """
 
+    def disconnect(self, port_name: str):
+        """
+        Desconecta un puerto de un dispositivo.
+
+        Parameters
+        ----------
+        port_name : str
+            Nombre del puerto a desconectar.
+        """
+        self.ports[port_name] = None
+
+
     def log(self, time: int, msg: str, info: str):
         """
         Escribe un log en el dispositivo.
@@ -241,6 +253,9 @@ class Hub(Device):
 
         self.ports[port_name] = cable
 
+    def disconnect(self, port_name: str):
+        return super().disconnect(port_name)
+
 
 class PC(Device):
     """
@@ -286,6 +301,11 @@ class PC(Device):
     def cable(self):
         """Cable : Cable conectado a la PC"""
         return self.ports[self.port_name(1)]
+    
+    @property
+    def is_connected(self):
+        """bool : Estado de conección del host"""
+        return self.cable is not None
 
     def load_package(self):
         """
@@ -360,6 +380,9 @@ class PC(Device):
         if self.is_sending:
             self.check_collision()
 
+        if self.is_sending:
+            return
+
         elif self.time_connected % self.signal_time//3 == 0:
             self.recived_bits.append(self.cable.value)
 
@@ -394,3 +417,15 @@ class PC(Device):
             raise ValueError(f'Port {port_name} is currently in use.')
 
         self.ports[self.port_name(1)] = cable
+
+    def disconnect(self, port_name: str):
+        self.data = self.current_package + self.data
+        self.current_package = []
+        self.package_index = 0
+        self.is_sending = False
+        self.send_time = 0
+        self.sending_bit = 0
+        self.max_time_to_send = 16
+        self.time_connected = 0
+        self.recived_bits = []
+        super().disconnect(port_name)

@@ -24,6 +24,7 @@ class NetSimulation():
         self.pending_devices = []
         self.port_to_device: Dict[str, Device] = {}
         self.devices: Dict[str, Device] = {}
+        self.disconnected_devices: Dict[str, Device] = {}
         self.hosts: Dict[str, PC] = {}
         self.end_delay = self.signal_time
     
@@ -78,6 +79,16 @@ class NetSimulation():
             raise ValueError(f'Unknown port {port2}')
 
         cab = Cable()
+        dev1 = self.port_to_device[port1]
+        dev2 = self.port_to_device[port2]
+
+        if dev1.name in self.disconnected_devices.keys():
+            self.disconnected_devices.pop(dev1.name)
+            self.add_device(dev1)
+        if dev2.name in self.disconnected_devices.keys():
+            self.disconnected_devices.pop(dev2.name)
+            self.add_device(dev2)
+
         self.port_to_device[port1].connect(cab, port1)
         self.port_to_device[port2].connect(cab, port2)
 
@@ -112,11 +123,17 @@ class NetSimulation():
             raise ValueError(f'Unknown port {port}')
 
         dev = self.port_to_device[port]
-        for port in dev.ports.keys():
-            self.port_to_device.pop(port)
-        self.devices.pop(dev.name)
+        dev.disconnect(port)
+
         if dev.name in self.hosts.keys():
-            self.hosts.pop(dev.name)    
+            self.hosts.pop(dev.name)
+
+        for cable in dev.ports.values():
+            if cable is not None:
+                break
+        else:
+            self.devices.pop(dev.name)
+            self.disconnected_devices[dev.name] = dev
 
     def start(self, instructions):
         """
@@ -142,7 +159,7 @@ class NetSimulation():
 
         Esta función se ejecuta una vez por cada milisegundo simulado.
         """
-
+        # print(self.time, self.devices)
         current_insts = []
         while self.instructions and self.time == self.instructions[0].time:
             current_insts.append(self.instructions.pop(0))
@@ -151,8 +168,7 @@ class NetSimulation():
             instr.execute(self)
 
         for device in self.devices.values():
-            if device not in self.hosts.values():
-                device.reset()
+            device.reset()
 
         for host in self.hosts.values():
             host.update(self.time)
