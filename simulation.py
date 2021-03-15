@@ -50,6 +50,9 @@ class NetSimulation():
         device : Device
             Dispositivo a añadir.
         """
+        
+        if device.name in self.devices.keys():
+            raise ValueError(f'The device name {device.name} is already taken.')
 
         self.devices[device.name] = device
 

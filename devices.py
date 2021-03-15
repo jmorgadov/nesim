@@ -359,7 +359,7 @@ class PC(Device):
         """
         if self.is_sending:
             self.check_collision()
-        
+
         elif self.time_connected % self.signal_time/3 == 0:
             self.recived_bits.append(self.cable.value)
 
