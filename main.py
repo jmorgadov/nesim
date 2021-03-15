@@ -7,10 +7,10 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-netsim = sim.NetSimulation()
 
-instr = []
-with open('input.txt', 'r') as f:
-    instr = prs.parse_instructions(f.readlines())
+if __name__ == '__main__':
+    netsim = sim.NetSimulation()
+    with open('input.txt', 'r') as f:
+        instr = prs.parse_instructions(f.readlines())
+        netsim.start(instr)
 
-netsim.start(instr)

@@ -34,7 +34,6 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.napoleon',
-    # 'numpydoc',
     'sphinx_rtd_theme'
 ]
 autodoc_typehints = 'description'
