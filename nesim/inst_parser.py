@@ -1,4 +1,4 @@
-from instructions import (
+from nesim.instructions import (
     CreateHostIns,
     CreateHubIns,
     SendIns,
