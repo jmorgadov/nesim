@@ -11,6 +11,7 @@ Bienvenido a la documentación de nesim!
    :caption: Contenidos:
 
    about/about
+   getting_started/getting_started
    api_ref/api_ref
 
 

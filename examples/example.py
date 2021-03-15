@@ -1,7 +1,8 @@
+# example.py
+
 import nesim
 
 raw_instr = []
-
 with open('script.txt', 'r') as file:
     raw_instr = file.readlines()
 
