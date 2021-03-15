@@ -1,0 +1,6 @@
+0 create hub H 4
+0 create host PCA
+0 create host PCB
+0 connect PCA_1 H_1
+0 connect PCB_1 H_2
+0 send PCA 01110101
