@@ -21,6 +21,42 @@ class Cable():
         self.value = 0
 
 
+class DuplexCableHead():
+
+    def __init__(self, receive_cable, send_cable):
+        self.receive_cable: Cable = receive_cable
+        self.send_cable: Cable = send_cable
+
+    def send(self, bit):
+        self.send_cable.value = bit
+  
+    def receive(self):
+        return self.receive_cable.value
+        
+    @property
+    def send_value(self):
+        return self.send_cable.value
+  
+    @property
+    def receive_value(self):
+        return self.receive_cable.value
+
+class Duplex():
+
+    def __init__(self):
+        c1, c2 = Cable(), Cable()
+        self.head_1 = DuplexCableHead(c1, c2)
+        self.head_2 = DuplexCableHead(c2, c1)
+
+    @property
+    def h1(self):
+        return self.head_1
+
+    @property
+    def h2(self):
+        return self.head_2
+
+
 class Device(metaclass=abc.ABCMeta):
     """
     Representa un dispositivo.
@@ -54,7 +90,7 @@ class Device(metaclass=abc.ABCMeta):
         Este valor se actualiza en cada llamado a la función ``update``.
     """
 
-    def __init__(self, name: str, ports: Dict[str, Cable]):
+    def __init__(self, name: str, ports: Dict[str, DuplexCableHead]):
         self.name = name
         self.ports = ports
         self.logs = []
@@ -94,14 +130,14 @@ class Device(metaclass=abc.ABCMeta):
         self.sim_time = time
 
     @abc.abstractmethod
-    def connect(self, cable: Cable, port_name: str):
+    def connect(self, cable_head: DuplexCableHead, port_name: str):
         """
         Conecta un cable dado a un puerto determinado.
 
         Parameters
         ----------
-        cable : Cable
-            Cable a conectar.
+        cable_head : DuplexCableHead
+            Uno de los extremos del cable a conectar.
         port_name : str
             Nombre del puerto en el que será conectado el cable.
         """
@@ -161,6 +197,7 @@ class Device(metaclass=abc.ABCMeta):
             file.write('\n'.join(self.logs))
             file.write(f'\n{"-" * len(header)}\n')
 
+    
 class Hub(Device):
     """
     Representa un Hub en la simulación.
@@ -185,9 +222,9 @@ class Hub(Device):
 
     def reset(self):
         self._updating = False
-        for _, cable in self.ports.items():
-            if cable is not None:
-                cable.value = 0
+        for _, cable_head in self.ports.items():
+            if cable_head is not None:
+                cable_head.send(0)
 
     def save_log(self, path=''):
         output_folder = Path(path)
@@ -242,30 +279,30 @@ class Hub(Device):
         port_name : str
             Nombre del puerto.
         """
-        cable = self.ports[port_name]
-        return str(cable.value) if cable is not None else '-'
+        cable_head = self.ports[port_name]
+        return str(cable_head.receive()) if cable_head is not None else '-'
 
     def update(self, time):
         super().update(time)
         val = reduce(lambda x, y: x|y, \
-        [c.value for c in self.ports.values() if c is not None])
+        [c.receive() for c in self.ports.values() if c is not None])
 
         if not self._updating:
             self._received = [self.get_port_value(p) for p in self.ports.keys()]        
 
-        for _, cable in self.ports.items():
-            if cable is not None:
-                cable.value = val
+        for _, cable_head in self.ports.items():
+            if cable_head is not None:
+                cable_head.send(val)
 
         self._sent = [self.get_port_value(p) for p in self.ports.keys()]
         self.special_log(time, self._received, self._sent)
         self._updating = True
 
-    def connect(self, cable: Cable, port_name: str):
+    def connect(self, cable_head: DuplexCableHead, port_name: str):
         if self.ports[port_name] is not None:
             raise ValueError(f'Port {port_name} is currently in use.')
 
-        self.ports[port_name] = cable
+        self.ports[port_name] = cable_head
 
     def disconnect(self, port_name: str):
         return super().disconnect(port_name)
@@ -311,14 +348,14 @@ class PC(Device):
         self.max_time_to_send *= 2
 
     @property
-    def cable(self):
-        """Cable : Cable conectado a la PC"""
+    def cable_head(self):
+        """DuplexCableHead : Extremo del cable conectado a la PC"""
         return self.ports[self.port_name(1)]
     
     @property
     def is_connected(self):
         """bool : Estado de conección del host"""
-        return self.cable is not None
+        return self.cable_head is not None
 
     def load_package(self):
         """
@@ -335,7 +372,7 @@ class PC(Device):
             elif self.is_sending:
                 self.sending_bit = 0
                 self.is_sending = False
-                self.cable.value = 0
+                self.cable_head.send(0)
 
 
     def update(self, time):
@@ -353,19 +390,8 @@ class PC(Device):
             self.is_sending = True
             self.sending_bit = self.current_package[self.package_index]
             # self.log(time, f'Trying to send {self.sending_bit}')
-            self.cable.value = self.sending_bit
+            self.cable_head.send(self.sending_bit)
 
-            coll = self.check_collision()
-
-            if not coll:
-                if self.send_time == 0:                
-                    self.log(self.sim_time, 'Sent', f'{self.sending_bit}')
-                self.send_time += 1
-                if self.send_time == self.signal_time:
-                    self.package_index += 1
-                    if self.package_index == len(self.current_package):
-                        self.current_package = []              
-                    self.send_time = 0
 
         self.time_connected += 1
 
@@ -392,13 +418,23 @@ class PC(Device):
         se guarda como lectura final la moda de los datos almacenados.
         """
         if self.is_sending:
-            self.check_collision()
+            coll = self.check_collision()
+
+            if not coll:                
+                if self.send_time == 0:                
+                    self.log(self.sim_time, 'Sent', f'{self.sending_bit}')
+                self.send_time += 1
+                if self.send_time == self.signal_time:
+                    self.package_index += 1
+                    if self.package_index == len(self.current_package):
+                        self.current_package = []              
+                    self.send_time = 0
 
         if self.is_sending:
             return
 
         elif self.time_connected % self.signal_time//3 == 0:
-            self.recived_bits.append(self.cable.value)
+            self.recived_bits.append(self.cable_head.receive())
 
         if self.time_connected % self.signal_time == 0 and self.recived_bits:
             temp = [(v,k) for k,v in Counter(self.recived_bits).items()]
@@ -414,7 +450,7 @@ class PC(Device):
         bool
             ``True`` si hubo colisión, ``False`` en caso contrario.
         """
-        if self.is_sending and self.cable.value != self.sending_bit:
+        if self.is_sending and self.cable_head.receive() != self.sending_bit:
             self.time_to_send = randint(1, self.max_time_to_send)
             self.readjust_max_time_to_send()
             self.log(self.sim_time,
@@ -426,11 +462,11 @@ class PC(Device):
             return True
         return False
 
-    def connect(self, cable: Cable, port_name: str):
-        if self.cable is not None:
+    def connect(self, cable_head: DuplexCableHead, port_name: str):
+        if self.cable_head is not None:
             raise ValueError(f'Port {port_name} is currently in use.')
 
-        self.ports[self.port_name(1)] = cable
+        self.ports[self.port_name(1)] = cable_head
         self.log(self.sim_time, 'Connected')
 
     def disconnect(self, port_name: str):
