@@ -3,10 +3,9 @@ import logging
 from functools import reduce
 from pathlib import Path
 from typing import Dict, List
-from random import randint, seed
+from random import randint
 from collections import Counter
 
-seed(0)
 
 class Cable():
     """
