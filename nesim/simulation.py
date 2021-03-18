@@ -1,5 +1,5 @@
 from typing import Dict, List
-from nesim.devices import Device, PC, Cable
+from nesim.devices import Device, Duplex, PC, Cable
 import nesim.utils as utils
 
 
@@ -78,7 +78,7 @@ class NetSimulation():
         if port2 not in self.port_to_device.keys():
             raise ValueError(f'Unknown port {port2}')
 
-        cab = Cable()
+        cab = Duplex()
         dev1 = self.port_to_device[port1]
         dev2 = self.port_to_device[port2]
 
@@ -91,8 +91,8 @@ class NetSimulation():
 
         dev1.sim_time = self.time
         dev2.sim_time = self.time
-        self.port_to_device[port1].connect(cab, port1)
-        self.port_to_device[port2].connect(cab, port2)
+        self.port_to_device[port1].connect(cab.h1, port1)
+        self.port_to_device[port2].connect(cab.h2, port2)
 
     def send(self, host_name: str, data: List[int]):
         """
@@ -161,6 +161,7 @@ class NetSimulation():
 
         Esta función se ejecuta una vez por cada milisegundo simulado.
         """
+        
         # print(self.time, self.devices)
         current_insts = []
         while self.instructions and self.time == self.instructions[0].time:
