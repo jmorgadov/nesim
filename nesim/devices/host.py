@@ -4,7 +4,7 @@ from random import randint
 from collections import Counter
 from typing import List
 
-class PC(Device):
+class Host(Device):
     """
     Representa una PC (Host).
 

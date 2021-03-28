@@ -12,7 +12,7 @@ from nesim.devices import (
     Cable,
     Device,
     Hub,
-    PC
+    Host
 )
 import logging
 from pathlib import Path
@@ -37,5 +37,5 @@ __all__ = [
     'Cable',
     'Device',
     'Hub',
-    'PC'
+    'Host'
 ]

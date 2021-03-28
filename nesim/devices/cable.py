@@ -1,5 +1,4 @@
 
-
 class Cable():
     """
     Representa un cable físico.
