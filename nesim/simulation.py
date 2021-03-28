@@ -34,8 +34,7 @@ class NetSimulation():
         bool : Indica si la simulación todavía está en ejecución.
         """
 
-        device_sending = any([(d.is_sending or d.time_to_send) \
-             for d in self.hosts.values()])
+        device_sending = any([d.is_active for d in self.hosts.values()])
         running = self.instructions or device_sending
         if not running:
             self.end_delay -= 1

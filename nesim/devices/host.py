@@ -1,3 +1,4 @@
+from nesim.devices.send_receiver import SendReceiver
 from nesim.devices.device import Device
 from nesim.devices.cable import DuplexCableHead
 from random import randint
@@ -25,71 +26,26 @@ class Host(Device):
         ports = {f'{name}_1' : None}
         super().__init__(name, ports)
         self.signal_time = signal_time
-        self.data = []
-        self.current_package = []
-        self.package_index = 0
-        self.time_to_send = 0
-        self.max_time_to_send = 1
-        self.send_time = 0
-        self.sending_bit = 0
-        self.is_sending = False
-        self.time_connected = 0
-        self.recived_bits = []
-
-    def readjust_max_time_to_send(self):
-        """
-        Ajusta el tiempo máximo que será utilizado en la selección aleatoria
-        de cuanto tiempo debe esperar para reintentar un envío.
-        """
-        self.max_time_to_send *= 2
+        self.send_receiver: SendReceiver = None
 
     @property
     def cable_head(self):
         """DuplexCableHead : Extremo del cable conectado a la PC"""
         return self.ports[self.port_name(1)]
-    
+
     @property
     def is_connected(self):
         """bool : Estado de conección del host"""
-        return self.cable_head is not None
+        return self.send_receiver is not None and self.send_receiver.cable_head is not None
 
-    def load_package(self):
-        """
-        Carga el próximo paquete a enviar si hay datos.
-        """
-        if not self.current_package:
-            if self.data:
-                self.current_package = self.data[:8]
-                self.data = self.data[8:]
-                self.max_time_to_send = 16
-                self.package_index = 0
-                self.send_time = 0
-                self.is_sending = True
-            elif self.is_sending:
-                self.sending_bit = 0
-                self.is_sending = False
-                self.cable_head.send(0)
-
+    @property
+    def is_active(self):
+        return self.send_receiver.is_sending or \
+               self.send_receiver.time_to_send
 
     def update(self, time):
         super().update(time)
-
-        self.load_package()
-
-        if self.time_to_send:
-            self.time_to_send -= 1
-
-        if self.time_to_send:
-            return
-        
-        if self.current_package:
-            self.is_sending = True
-            self.sending_bit = self.current_package[self.package_index]
-            # self.log(time, f'Trying to send {self.sending_bit}')
-            self.cable_head.send(self.sending_bit)
-
-
-        self.time_connected += 1
+        self.send_receiver.update()
 
     def send(self, data: List[int]):
         """
@@ -100,7 +56,7 @@ class Host(Device):
         data : List[int]
             Datos a ser enviados.
         """
-        self.data += data
+        self.send_receiver.send(data)
 
     def receive(self):
         """
@@ -113,67 +69,39 @@ class Host(Device):
         entre un ``SIGNAL_TIME`` y el siguiente. Al concluir el ``SIGNAL_TIME``
         se guarda como lectura final la moda de los datos almacenados.
         """
-        if self.is_sending:
-            coll = self.check_collision()
+        self.send_receiver.receive()
 
-            if not coll:                
-                if self.send_time == 0:                
-                    self.log(self.sim_time, 'Sent', f'{self.sending_bit}')
-                self.send_time += 1
-                if self.send_time == self.signal_time:
-                    self.package_index += 1
-                    if self.package_index == len(self.current_package):
-                        self.current_package = []              
-                    self.send_time = 0
+    def _create_send_receiver(self, cable_head: DuplexCableHead):
+        self.send_receiver = SendReceiver(self.signal_time, cable_head)
 
-        if self.is_sending:
-            return
+        self.send_receiver.on_send.append(
+            lambda bit: self.log(self.sim_time, 'Sent', f'{bit}')
+        )
 
-        elif self.time_connected % self.signal_time//3 == 0:
-            self.recived_bits.append(self.cable_head.receive())
+        self.send_receiver.on_receive.append(
+            lambda bit: self.log(self.sim_time, 'Received', f'{bit}')
+        )
 
-        if self.time_connected % self.signal_time == 0 and self.recived_bits:
-            temp = [(v,k) for k,v in Counter(self.recived_bits).items()]
-            self.log(self.sim_time, 'Received', f'{max(temp)[1]}')
-            self.recived_bits = []
-
-    def check_collision(self):
-        """
-        Comprueba si existe una colisión.
-
-        Returns
-        -------
-        bool
-            ``True`` si hubo colisión, ``False`` en caso contrario.
-        """
-        if self.is_sending and self.cable_head.receive() != self.sending_bit:
-            self.time_to_send = randint(1, self.max_time_to_send)
-            self.readjust_max_time_to_send()
-            self.log(self.sim_time,
+        self.send_receiver.on_collision.append(
+            lambda : self.log(self.sim_time,
                      'Collision',
-                     f'Waitting {self.time_to_send}ms to send')
-            self.package_index = 0
-            self.send_time = 0
-            self.is_sending = False
-            return True
-        return False
+                     f'Waitting {self.send_receiver.time_to_send}ms to send')
+        )
 
     def connect(self, cable_head: DuplexCableHead, port_name: str):
-        if self.cable_head is not None:
+        if self.send_receiver is not None and \
+           self.send_receiver.cable_head is not None:
             raise ValueError(f'Port {port_name} is currently in use.')
 
-        self.ports[self.port_name(1)] = cable_head
+        if self.send_receiver is None:
+            self._create_send_receiver(cable_head)
+        else:
+            self.send_receiver.cable_head = cable_head
+
+        self.ports[self.port_name(1)] = self.send_receiver
         self.log(self.sim_time, 'Connected')
 
     def disconnect(self, port_name: str):
-        self.data = self.current_package + self.data
-        self.current_package = []
-        self.package_index = 0
-        self.is_sending = False
-        self.send_time = 0
-        self.sending_bit = 0
-        self.max_time_to_send = 16
-        self.time_connected = 0
-        self.recived_bits = []
+        self.send_receiver.disconnect()
         super().disconnect(port_name)
         self.log(self.sim_time, 'Disconnected')
