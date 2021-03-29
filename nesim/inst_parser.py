@@ -42,7 +42,7 @@ def _parse_single_inst(inst_text: str):
 
     elif inst_name == 'mac':
         host_name = temp_line[2]
-        address = to_binary(temp_line[3])
+        address = [int(i) for i in to_binary(temp_line[3])]
         return MacIns(inst_time, host_name, address)
 
     elif inst_name = 'send_frame':
