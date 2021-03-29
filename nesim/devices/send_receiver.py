@@ -50,8 +50,7 @@ class SendReceiver():
         """
         if not self.current_package:
             if self.data:
-                self.current_package = self.data[:8]
-                self.data = self.data[8:]
+                self.current_package = self.data.pop(0)
                 self.max_time_to_send = 16
                 self.package_index = 0
                 self.send_time = 0
@@ -76,7 +75,6 @@ class SendReceiver():
             # self.log(time, f'Trying to send {self.sending_bit}')
             self.cable_head.send(self.sending_bit)
 
-
         self.time_connected += 1
 
     def send(self, data: List[int]):
@@ -88,7 +86,11 @@ class SendReceiver():
         data : List[int]
             Datos a ser enviados.
         """
-        self.data += data
+        packages = []
+        while data:
+            packages.append(data[:_PACKAGE_SIZE])
+            data = data[_PACKAGE_SIZE:]
+        self.data += packages
 
     def receive(self):
         """
@@ -147,9 +149,9 @@ class SendReceiver():
                 act()
             return True
         return False
-    
+
     def disconnect(self):
-        self.data = self.current_package + self.data
+        self.data.insert(0, self.current_package)
         self.current_package = []
         self.package_index = 0
         self.is_sending = False
