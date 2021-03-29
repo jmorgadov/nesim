@@ -1,6 +1,7 @@
 from nesim.instructions import (
     CreateHostIns,
     CreateHubIns,
+    CreateSwitchIns,
     SendIns,
     ConnectIns,
     DisconnectIns
@@ -20,6 +21,9 @@ def _parse_single_inst(inst_text: str):
         if device_type == 'hub':
             cant_ports = int(temp_line[4])
             return CreateHubIns(inst_time, device_name, cant_ports)
+        elif device_type == 'switch':
+            cant_ports = int(temp_line[4])
+            return CreateSwitchIns(inst_time, device_name, cant_ports)
         else:
             return CreateHostIns(inst_time, device_name)
 

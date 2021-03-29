@@ -58,7 +58,7 @@ class CreateHubIns(Instruction):
 class CreateHostIns(Instruction):
     """
     Instrucción para crear un Host.
-    
+
     Parameters
     ----------
     time : int
@@ -71,10 +71,35 @@ class CreateHostIns(Instruction):
     def __init__(self, time: int, host_name: str):
         super().__init__(time)
         self.host_name = host_name
-    
+
     def execute(self, net_sim: sim.NetSimulation):
         host = dv.Host(self.host_name, net_sim.signal_time)
         net_sim.add_device(host)
+
+class CreateSwitchIns(Instruction):
+    """
+    Instrucción para crear un Switch.
+
+    Parameters
+    ----------
+    time : int
+        Timepo en milisegundos en el que será ejecutada la instrucción en
+        la simulación.
+    switch_name : str
+        Nombre del switch.
+    ports_count : int
+        Cantidad de puertos del switch.
+    """
+
+    def __init__(self, time: int, switch_name: str, ports_count: int):
+        super().__init__(time)
+        self.switch_name = switch_name
+        self.ports_count = ports_count
+
+    def execute(self, net_sim: sim.NetSimulation):
+        switch = dv.Switch(self.switch_name, self.ports_count, 
+                           net_sim.signal_time)
+        net_sim.add_device(switch)
 
 
 class ConnectIns(Instruction):
