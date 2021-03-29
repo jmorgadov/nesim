@@ -146,6 +146,18 @@ class SendIns(Instruction):
     def execute(self, net_sim: sim.NetSimulation):
         net_sim.send(self.host_name, self.data)
 
+class SendFrameIns(Instruction):
+    """
+    """
+
+    def __init__(self, time: int, host_name: str, mac: str, data: List[int]):
+        super().__init__(time)
+        self.host_name = host_name
+        self.mac = mac
+        self.data = data
+
+    def execute(self, net_sim: sim.NetSimulation):
+        net_sim.send_frame()
 
 class DisconnectIns(Instruction):
     """
