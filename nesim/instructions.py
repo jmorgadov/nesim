@@ -189,4 +189,4 @@ class SendFrameIns(Instruction):
         self.data = data
     
     def execute(self, net_sim: sim.NetSimulation):
-        net_sim.send_frame(host_name, mac, data)
+        net_sim.send_frame(self.host_name, self.mac, self.data)

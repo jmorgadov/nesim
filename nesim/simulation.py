@@ -141,20 +141,18 @@ class NetSimulation():
         else:
             self.devices.pop(dev.name)
             self.disconnected_devices[dev.name] = dev
-    
+
     def send_frame(self, host_name: str, mac: List[int], data: List[int]):
-        """
-        """
         int.to_bytes()
 
-        temp_str = f'{len(data)/8:b}'
+        size_str = f'{len(data)/8:b}'
 
         data_size = [0]*8
 
-        for i in range(1,len(temp_str + 1)):
-            temp_list[-i] = int(temp_str[-i])
-        
-        final_data += self.hosts[host_name] + mac + data_size + [1]*8 + data
+        for i in range(1,len(size_str + 1)):
+            data_size[-i] = int(size_str[-i])
+
+        final_data = self.hosts[host_name] + mac + data_size + [0]*8 + data
 
         self.send(host_name, final_data, len(final_data))
 

@@ -2,7 +2,9 @@ from nesim.instructions import (
     CreateHostIns,
     CreateHubIns,
     CreateSwitchIns,
+    MacIns,
     SendIns,
+    SendFrameIns,
     ConnectIns,
     DisconnectIns
 )
@@ -45,7 +47,7 @@ def _parse_single_inst(inst_text: str):
         address = [int(i) for i in to_binary(temp_line[3])]
         return MacIns(inst_time, host_name, address)
 
-    elif inst_name = 'send_frame':
+    elif inst_name == 'send_frame':
         host_name = temp_line[2]
         mac = [int(i) for i in to_binary(temp_line[3])]
         data = [int(i) for i in to_binary(temp_line[4])]
