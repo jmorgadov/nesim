@@ -1,5 +1,5 @@
 from typing import Dict, List
-from nesim.devices import Device, Duplex, PC, Cable
+from nesim.devices import Device, Duplex, Host, Cable
 import nesim.utils as utils
 
 
@@ -25,7 +25,7 @@ class NetSimulation():
         self.port_to_device: Dict[str, Device] = {}
         self.devices: Dict[str, Device] = {}
         self.disconnected_devices: Dict[str, Device] = {}
-        self.hosts: Dict[str, PC] = {}
+        self.hosts: Dict[str, Host] = {}
         self.end_delay = self.signal_time
     
     @property
@@ -34,8 +34,7 @@ class NetSimulation():
         bool : Indica si la simulación todavía está en ejecución.
         """
 
-        device_sending = any([(d.is_sending or d.time_to_send) \
-             for d in self.hosts.values()])
+        device_sending = any([d.is_active for d in self.hosts.values()])
         running = self.instructions or device_sending
         if not running:
             self.end_delay -= 1
@@ -56,7 +55,7 @@ class NetSimulation():
 
         self.devices[device.name] = device
 
-        if isinstance(device, PC):
+        if isinstance(device, Host):
             self.hosts[device.name] = device
 
         for port in device.ports.keys():

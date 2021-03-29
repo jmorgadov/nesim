@@ -130,7 +130,7 @@ dmypy.json
 
 # code editor
 .vscode
-*[!script].txt
+*.txt
 
 # poetry
 poetry.lock
