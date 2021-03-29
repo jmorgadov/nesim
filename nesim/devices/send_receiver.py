@@ -22,7 +22,7 @@ class SendReceiver():
         Datos que debe enviar la PC.
     """
 
-    def __init__(self, signal_time: int, cable_head: DuplexCableHead):
+    def __init__(self, signal_time: int, cable_head: DuplexCableHead = None):
         self.cable_head = cable_head
         self.signal_time = signal_time
         self.data = []
@@ -61,6 +61,9 @@ class SendReceiver():
                 self.cable_head.send(None)
 
     def update(self):
+        if self.cable_head is None:
+            return
+
         self.load_package()
 
         if self.time_to_send:
