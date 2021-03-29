@@ -29,7 +29,7 @@ class Hub(Device):
         self._updating = False
         for _, cable_head in self.ports.items():
             if cable_head is not None:
-                cable_head.send(0)
+                cable_head.send(None)
 
     def save_log(self, path=''):
         output_folder = Path(path)
@@ -85,12 +85,20 @@ class Hub(Device):
             Nombre del puerto.
         """
         cable_head = self.ports[port_name]
-        return str(cable_head.receive()) if cable_head is not None else '-'
+        bit = None
+        if cable_head is not None:
+            bit = cable_head.receive()
+
+        return str(bit) if bit is not None else '-'
 
     def update(self, time):
         super().update(time)
-        val = reduce(lambda x, y: x|y, \
-        [c.receive() for c in self.ports.values() if c is not None])
+        p_data = [c.receive() for c in self.ports.values() if c is not None]
+        p_data_filt = [bit for bit in p_data if bit is not None]
+
+        val = None
+        if p_data_filt:
+            val = reduce(lambda x, y: x|y, p_data_filt)
 
         if not self._updating:
             self._received = [self.get_port_value(p) for p in self.ports.keys()]        

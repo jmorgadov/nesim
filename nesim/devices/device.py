@@ -1,5 +1,6 @@
 import abc
 import logging
+from nesim.devices.send_receiver import SendReceiver
 from pathlib import Path
 from typing import Dict
 from nesim.devices.cable import DuplexCableHead
@@ -38,7 +39,7 @@ class Device(metaclass=abc.ABCMeta):
         Este valor se actualiza en cada llamado a la función ``update``.
     """
 
-    def __init__(self, name: str, ports: Dict[str, DuplexCableHead]):
+    def __init__(self, name: str, ports: Dict[str, SendReceiver]):
         self.name = name
         self.ports = ports
         self.logs = []

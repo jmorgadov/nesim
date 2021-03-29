@@ -58,7 +58,7 @@ class SendReceiver():
             elif self.is_sending:
                 self.sending_bit = 0
                 self.is_sending = False
-                self.cable_head.send(0)
+                self.cable_head.send(None)
 
     def update(self):
         self.load_package()
@@ -121,11 +121,12 @@ class SendReceiver():
             return
 
         elif self.time_connected % self.signal_time//3 == 0:
-            self.recived_bits.append(self.cable_head.receive())
+            bit = self.cable_head.receive()
+            if bit is not None:
+                self.recived_bits.append(bit)
 
         if self.time_connected % self.signal_time == 0 and self.recived_bits:
             temp = [(v,k) for k,v in Counter(self.recived_bits).items()]
-            # self.log(self.sim_time, 'Received', f'{max(temp)[1]}')
             for act in self.on_receive:
                 act(max(temp)[1])
             self.recived_bits = []
