@@ -45,6 +45,12 @@ def _parse_single_inst(inst_text: str):
         address = to_binary(temp_line[3])
         return MacIns(inst_time, host_name, address)
 
+    elif inst_name = 'send_frame':
+        host_name = temp_line[2]
+        mac = [int(i) for i in to_binary(temp_line[3])]
+        data = [int(i) for i in to_binary(temp_line[4])]
+        return SendFrameIns(inst_time, host_name, mac, data)
+
     else:
         port_name = temp_line[2]
         return DisconnectIns(inst_time, port_name)
