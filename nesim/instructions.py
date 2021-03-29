@@ -138,15 +138,10 @@ class SendIns(Instruction):
     data : List[int]
         Datos a enviar.
     """
-    def __init__(self, time: int, host_name: str, data: List[int],
-                 package_size: int = 8):
+    def __init__(self, time: int, host_name: str, data: List[int]):
         super().__init__(time)
         self.host_name = host_name
-        packages = []
-        while data:
-            packages.append(data[:package_size])
-            data = data[package_size:]
-        self.data = packages
+        self.data = data
 
     def execute(self, net_sim: sim.NetSimulation):
         net_sim.send(self.host_name, self.data)

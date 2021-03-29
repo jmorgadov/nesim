@@ -93,7 +93,8 @@ class NetSimulation():
         self.port_to_device[port1].connect(cab.h1, port1)
         self.port_to_device[port2].connect(cab.h2, port2)
 
-    def send(self, host_name: str, data: List[List[int]]):
+    def send(self, host_name: str, data: List[int],
+             package_size: int = 8):
         """
         Ordena a un host a enviar una serie de datos determinada.
 
@@ -101,14 +102,19 @@ class NetSimulation():
         ----------
         host_name : str
             Nombre del host que enviará la información.
-        data : List[List[int]]
+        data : List[int]
             Datos a enviar.
         """
+
+        packages = []
+        while data:
+            packages.append(data[:package_size])
+            data = data[package_size:]
 
         if host_name not in self.hosts.keys():
             raise ValueError(f'Unknown host {host_name}')
 
-        self.hosts[host_name].send(data)
+        self.hosts[host_name].send(packages)
 
     def disconnect(self, port: str):
         """
