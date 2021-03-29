@@ -93,7 +93,7 @@ class NetSimulation():
         self.port_to_device[port1].connect(cab.h1, port1)
         self.port_to_device[port2].connect(cab.h2, port2)
 
-    def send(self, host_name: str, data: List[int]):
+    def send(self, host_name: str, data: List[List[int]]):
         """
         Ordena a un host a enviar una serie de datos determinada.
 
@@ -101,7 +101,7 @@ class NetSimulation():
         ----------
         host_name : str
             Nombre del host que enviará la información.
-        data : List[int]
+        data : List[List[int]]
             Datos a enviar.
         """
 

@@ -80,20 +80,16 @@ class SendReceiver():
 
         self.time_connected += 1
 
-    def send(self, data: List[int]):
+    def send(self, data: List[List[int]]):
         """
         Agrega nuevos datos para ser enviados a la lista de datos.
 
         Parameters
         ----------
-        data : List[int]
+        data : List[List[int]]
             Datos a ser enviados.
         """
-        packages = []
-        while data:
-            packages.append(data[:_PACKAGE_SIZE])
-            data = data[_PACKAGE_SIZE:]
-        self.data += packages
+        self.data += data
 
     def receive(self):
         """

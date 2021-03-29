@@ -47,13 +47,13 @@ class Host(Device):
         super().update(time)
         self.send_receiver.update()
 
-    def send(self, data: List[int]):
+    def send(self, data: List[List[int]]):
         """
         Agrega nuevos datos para ser enviados a la lista de datos.
 
         Parameters
         ----------
-        data : List[int]
+        data : List[List[int]]
             Datos a ser enviados.
         """
         self.send_receiver.send(data)
