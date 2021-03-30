@@ -11,8 +11,8 @@ from nesim.instructions import (
 from typing import List
 from pathlib import Path
 
-def to_binary(x:int):
-    return format(int(x, base=16), '04b')
+def to_binary(x: str, fmt: str = '016b'):
+    return format(int(x, base=16), fmt)
 
 def _parse_single_inst(inst_text: str):
 
@@ -44,6 +44,7 @@ def _parse_single_inst(inst_text: str):
 
     elif inst_name == 'mac':
         host_name = temp_line[2]
+        print(to_binary(temp_line[3]))
         address = [int(i) for i in to_binary(temp_line[3])]
         return MacIns(inst_time, host_name, address)
 

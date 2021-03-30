@@ -168,25 +168,21 @@ class DisconnectIns(Instruction):
 
 
 class MacIns(Instruction):
-    """
-    """
     def __init__(self, time: int, host_name: str, address: List[int]):
         super().__init__(time)
         self.host_name = host_name
         self.address = address
     
     def execute(self, net_sim: sim.NetSimulation):
-        pass
-
+        net_sim.assign_mac_addres(self.host_name, self.address)
 
 class SendFrameIns(Instruction):
-    """
-    """
-    def __init__(self, time: int, host_name: str, mac: List[int], data: List[int]):
+    def __init__(self, time: int, host_name: str, mac: List[int],
+                 data: List[int]):
         super().__init__(time)
         self.host_name = host_name
         self.mac = mac
         self.data = data
-    
+
     def execute(self, net_sim: sim.NetSimulation):
         net_sim.send_frame(self.host_name, self.mac, self.data)

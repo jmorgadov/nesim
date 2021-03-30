@@ -1,3 +1,5 @@
+from nesim.devices.switch import Switch
+from nesim.devices.hub import Hub
 from typing import Dict, List
 from nesim.devices import Device, Duplex, Host, Cable
 import nesim.utils as utils
@@ -27,14 +29,14 @@ class NetSimulation():
         self.disconnected_devices: Dict[str, Device] = {}
         self.hosts: Dict[str, Host] = {}
         self.end_delay = self.signal_time
-    
+
     @property
     def is_running(self):
         """
         bool : Indica si la simulación todavía está en ejecución.
         """
 
-        device_sending = any([d.is_active for d in self.hosts.values()])
+        device_sending = any([d.is_active for d in self.devices.values()])
         running = self.instructions or device_sending
         if not running:
             self.end_delay -= 1
@@ -143,17 +145,14 @@ class NetSimulation():
             self.disconnected_devices[dev.name] = dev
 
     def send_frame(self, host_name: str, mac: List[int], data: List[int]):
-        int.to_bytes()
-
-        size_str = f'{len(data)/8:b}'
-
+        size_str = f'{len(data)//8:b}'
         data_size = [0]*8
 
-        for i in range(1,len(size_str + 1)):
+        for i in range(1,len(size_str) + 1):
             data_size[-i] = int(size_str[-i])
 
-        final_data = self.hosts[host_name] + mac + data_size + [0]*8 + data
-
+        final_data = self.hosts[host_name].mac + mac + data_size + [0]*8 + data
+        print(''.join([str(i) for i in final_data]))
         self.send(host_name, final_data, len(final_data))
 
     def start(self, instructions):
@@ -172,6 +171,9 @@ class NetSimulation():
             self.update()
         for device in self.devices.values():
             device.save_log(self.output_path)
+
+    def assign_mac_addres(self, host_name, mac):
+        self.hosts[host_name].mac = mac
 
     def update(self):
         """
@@ -197,10 +199,14 @@ class NetSimulation():
 
         for _ in range(len(self.devices)):
             for device in self.devices.values():
-                if device not in self.hosts.values():
+                if isinstance(device, Hub):
                     device.update(self.time)
+
+        for dev in self.devices.values():
+            if isinstance(dev, Switch):
+                dev.update(self.time)
 
         for host in self.hosts.values():
             host.receive()
-        
+
         self.time += 1

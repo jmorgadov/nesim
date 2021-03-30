@@ -24,6 +24,7 @@ class Host(Device):
 
     def __init__(self, name: str, signal_time: int):
         self.signal_time = signal_time
+        self.mac = None
         self.send_receiver = self.create_send_receiver()
         ports = {f'{name}_1' : self.send_receiver}
         super().__init__(name, ports)
@@ -40,8 +41,7 @@ class Host(Device):
 
     @property
     def is_active(self):
-        return self.send_receiver.is_sending or \
-               self.send_receiver.time_to_send
+        return self.send_receiver.is_active
 
     def update(self, time):
         super().update(time)

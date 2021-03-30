@@ -25,6 +25,10 @@ class Hub(Device):
 
         super().__init__(name, ports)
 
+    @property
+    def is_active(self):
+        return False
+
     def reset(self):
         self._updating = False
         for _, cable_head in self.ports.items():
@@ -106,6 +110,7 @@ class Hub(Device):
         for _, cable_head in self.ports.items():
             if cable_head is not None:
                 cable_head.send(val)
+                cable_head.receive_cable.value = val
 
         self._sent = [self.get_port_value(p) for p in self.ports.keys()]
         self.special_log(time, self._received, self._sent)

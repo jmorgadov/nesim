@@ -37,6 +37,11 @@ class SendReceiver():
         self.recived_bits = []
         self.on_send, self.on_receive, self.on_collision = [], [], []
 
+    @property
+    def is_active(self):
+        return self.is_sending or \
+               self.time_to_send
+
     def readjust_max_time_to_send(self):
         """
         Ajusta el tiempo máximo que será utilizado en la selección aleatoria
@@ -139,7 +144,7 @@ class SendReceiver():
         bool
             ``True`` si hubo colisión, ``False`` en caso contrario.
         """
-        if self.is_sending and self.cable_head.receive() != self.sending_bit:
+        if self.is_sending and self.cable_head.send_value != self.sending_bit:
             self.time_to_send = randint(1, self.max_time_to_send)
             self.readjust_max_time_to_send()
             self.package_index = 0
