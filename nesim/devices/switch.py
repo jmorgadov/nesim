@@ -140,5 +140,6 @@ class Switch(Device):
         sr.cable_head = cable_head
 
     def disconnect(self, port_name: str):
+        self.ports_buffer[list(self.ports.keys()).index(port_name)] = []
         self.ports[port_name].disconnect()
         

@@ -109,11 +109,12 @@ class SendReceiver():
         entre un ``SIGNAL_TIME`` y el siguiente. Al concluir el ``SIGNAL_TIME``
         se guarda como lectura final la moda de los datos almacenados.
         """
+
         if self.is_sending:
             coll = self.check_collision()
 
             if not coll:
-                if self.send_time == 0:                    
+                if self.send_time == 0:
                     for act in self.on_send:
                         act(self.sending_bit)
                 self.send_time += 1
@@ -159,7 +160,9 @@ class SendReceiver():
         return False
 
     def disconnect(self):
-        self.data.insert(0, self.current_package)
+        if self.current_package:
+            self.data.insert(0, self.current_package)
+        self.cable_head = None
         self.current_package = []
         self.package_index = 0
         self.is_sending = False

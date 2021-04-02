@@ -114,8 +114,6 @@ class Hub(Device):
             if cable_head is not None:
                 cable_head.send(val)
 
-        self._sent = [self.get_port_value(p) for p in self.ports.keys()]
-
         self._sent = [self.get_port_value(p, False) for p in self.ports]
         self.special_log(time, self._received, self._sent)
         self._updating = True

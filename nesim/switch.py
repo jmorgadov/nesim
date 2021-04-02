@@ -114,7 +114,10 @@ class Switch(Device):
         return str(bit) if bit is not None else '-'
 
     def receive_on_port(self, port, bit):
-        self.ports_buffer[port].append(bit)
+        if bit is None:
+            self.ports_buffer[port] = []
+        else:
+            self.ports_buffer[port].append(bit)
         self.handle_buffer_data(port)
 
     def create_send_receiver(self, port, cable_head: DuplexCableHead = None):
