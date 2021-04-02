@@ -79,7 +79,6 @@ class NetSimulation():
         if port2 not in self.port_to_device.keys():
             raise ValueError(f'Unknown port {port2}')
 
-        cab = Duplex()
         dev1 = self.port_to_device[port1]
         dev2 = self.port_to_device[port2]
 
@@ -90,6 +89,7 @@ class NetSimulation():
             self.disconnected_devices.pop(dev2.name)
             self.add_device(dev2)
 
+        cab = Duplex()
         dev1.sim_time = self.time
         dev2.sim_time = self.time
         self.port_to_device[port1].connect(cab.h1, port1)
