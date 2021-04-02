@@ -22,7 +22,7 @@ class SendReceiver():
         Datos que debe enviar la PC.
     """
 
-    def __init__(self, signal_time: int, cable_head: DuplexCableHead):
+    def __init__(self, signal_time: int, cable_head: DuplexCableHead = None):
         self.cable_head = cable_head
         self.signal_time = signal_time
         self.data = []
@@ -36,6 +36,11 @@ class SendReceiver():
         self.time_connected = 0
         self.recived_bits = []
         self.on_send, self.on_receive, self.on_collision = [], [], []
+
+    @property
+    def is_active(self):
+        return self.is_sending or \
+               self.time_to_send
 
     def readjust_max_time_to_send(self):
         """
@@ -56,11 +61,17 @@ class SendReceiver():
                 self.send_time = 0
                 self.is_sending = True
             elif self.is_sending:
-                self.sending_bit = 0
+                self.sending_bit = None
                 self.is_sending = False
                 self.cable_head.send(None)
 
     def update(self):
+        
+        self.time_connected += 1
+
+        if self.cable_head is None:
+            return
+
         self.load_package()
 
         if self.time_to_send:
@@ -75,22 +86,17 @@ class SendReceiver():
             # self.log(time, f'Trying to send {self.sending_bit}')
             self.cable_head.send(self.sending_bit)
 
-        self.time_connected += 1
 
-    def send(self, data: List[int]):
+    def send(self, data: List[List[int]]):
         """
         Agrega nuevos datos para ser enviados a la lista de datos.
 
         Parameters
         ----------
-        data : List[int]
+        data : List[List[int]]
             Datos a ser enviados.
         """
-        packages = []
-        while data:
-            packages.append(data[:_PACKAGE_SIZE])
-            data = data[_PACKAGE_SIZE:]
-        self.data += packages
+        self.data += data
 
     def receive(self):
         """
@@ -114,7 +120,7 @@ class SendReceiver():
                 if self.send_time == self.signal_time:
                     self.package_index += 1
                     if self.package_index == len(self.current_package):
-                        self.current_package = []              
+                        self.current_package = []
                     self.send_time = 0
 
         if self.is_sending:
@@ -140,7 +146,7 @@ class SendReceiver():
         bool
             ``True`` si hubo colisión, ``False`` en caso contrario.
         """
-        if self.is_sending and self.cable_head.receive() != self.sending_bit:
+        if self.is_sending and self.cable_head.send_value != self.sending_bit:
             self.time_to_send = randint(1, self.max_time_to_send)
             self.readjust_max_time_to_send()
             self.package_index = 0

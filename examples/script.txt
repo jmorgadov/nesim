@@ -1,6 +1,8 @@
-0 create hub H 4
+0 create switch S 4
 0 create host PCA
 0 create host PCB
-0 connect PCA_1 H_1
-0 connect PCB_1 H_2
-0 send PCA 01110101
+0 connect PCA_1 S_1
+0 connect PCB_1 S_2
+0 mac PCA 000A
+0 mac PCB 000B
+0 send_frame PCA 000B 0000

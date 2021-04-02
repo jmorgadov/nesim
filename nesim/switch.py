@@ -17,10 +17,6 @@ class Switch(Device):
         self.mac_table: Dict[int, str] = {}
         super().__init__(name, ports)
 
-    @property
-    def is_active(self):
-        return any([sr.is_active for sr in self.ports.values()])
-
     def save_log(self, path=''):
         output_folder = Path(path)
         output_folder.mkdir(parents=True, exist_ok=True)        
@@ -55,16 +51,15 @@ class Switch(Device):
 
         log_msg = f'| {time: ^10} |'
         for re, se in zip(received, sent):
-            if re == '-'  and se == '-':
+            if re == '-':
                 log_msg += f' {"---" : ^11} |'
             else:
                 log_msg += f' {re :>4} . {se: <4} |'
         self.logs.append(log_msg)
 
-    def broadcast(self, from_port, data):
-        for port, send_receiver in self.ports.items():
-            if port != from_port and send_receiver.cable_head is not None:
-                send_receiver.send(data)
+    def broadcast(self, data):
+        for port in self.ports.values():
+            port.send(data)
 
     def reset(self):
         pass
@@ -72,11 +67,6 @@ class Switch(Device):
     def update(self, time: int):
         for send_receiver in self.ports.values():
             send_receiver.update()
-
-        for send_receiver in self.ports.values():
-            if send_receiver.cable_head is not None:
-                send_receiver.receive()
-
         received = [self.get_port_value(p) for p in self.ports]
         sent = [self.get_port_value(p, False) for p in self.ports]
         self.special_log(time, received, sent)
@@ -92,15 +82,15 @@ class Switch(Device):
         from_mac = from_bit_data_to_number(data[16:32])
         size = from_bit_data_to_number(data[32:40]) * 8
 
-        if len(data) - 48 < size:
+        if len(data) - 40 < size:
             return
 
-        self.mac_table[from_mac] = self.port_name(port + 1)
+        self.mac_table[from_mac] = self.port_name(port)
 
         if to_mac in self.mac_table:
-            self.ports[self.mac_table[to_mac]].send([data])
+            self.ports[self.mac_table[to_mac]].send(data)
         else:
-            self.broadcast(self.port_name(port + 1), [data])
+            self.broadcast(data)
         self.ports_buffer[port] = []
 
     def get_port_value(self, port_name: str, received: bool = True):

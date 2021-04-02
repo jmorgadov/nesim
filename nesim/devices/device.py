@@ -45,6 +45,10 @@ class Device(metaclass=abc.ABCMeta):
         self.logs = []
         self.sim_time = 0
 
+    @abc.abstractproperty
+    def is_active(self):
+        pass
+
     def port_name(self, port: int):
         """
         Devuelve el nombre de un puerto dado su número.

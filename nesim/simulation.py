@@ -1,3 +1,5 @@
+from nesim.devices.switch import Switch
+from nesim.devices.hub import Hub
 from typing import Dict, List
 from nesim.devices import Device, Duplex, Host, Cable
 import nesim.utils as utils
@@ -27,14 +29,14 @@ class NetSimulation():
         self.disconnected_devices: Dict[str, Device] = {}
         self.hosts: Dict[str, Host] = {}
         self.end_delay = self.signal_time
-    
+
     @property
     def is_running(self):
         """
         bool : Indica si la simulación todavía está en ejecución.
         """
 
-        device_sending = any([d.is_active for d in self.hosts.values()])
+        device_sending = any([d.is_active for d in self.devices.values()])
         running = self.instructions or device_sending
         if not running:
             self.end_delay -= 1
@@ -77,7 +79,6 @@ class NetSimulation():
         if port2 not in self.port_to_device.keys():
             raise ValueError(f'Unknown port {port2}')
 
-        cab = Duplex()
         dev1 = self.port_to_device[port1]
         dev2 = self.port_to_device[port2]
 
@@ -88,12 +89,15 @@ class NetSimulation():
             self.disconnected_devices.pop(dev2.name)
             self.add_device(dev2)
 
+        is_simple = isinstance(dev1, Hub) or isinstance(dev2, Hub)
+        cab = Duplex(simple=is_simple)
         dev1.sim_time = self.time
         dev2.sim_time = self.time
         self.port_to_device[port1].connect(cab.h1, port1)
         self.port_to_device[port2].connect(cab.h2, port2)
 
-    def send(self, host_name: str, data: List[int]):
+    def send(self, host_name: str, data: List[int],
+             package_size: int = 8):
         """
         Ordena a un host a enviar una serie de datos determinada.
 
@@ -105,10 +109,15 @@ class NetSimulation():
             Datos a enviar.
         """
 
+        packages = []
+        while data:
+            packages.append(data[:package_size])
+            data = data[package_size:]
+
         if host_name not in self.hosts.keys():
             raise ValueError(f'Unknown host {host_name}')
 
-        self.hosts[host_name].send(data)
+        self.hosts[host_name].send(packages)
 
     def disconnect(self, port: str):
         """
@@ -136,6 +145,17 @@ class NetSimulation():
             self.devices.pop(dev.name)
             self.disconnected_devices[dev.name] = dev
 
+    def send_frame(self, host_name: str, mac: List[int], data: List[int]):
+        size_str = f'{len(data)//8:b}'
+        data_size = [0]*8
+
+        for i in range(1,len(size_str) + 1):
+            data_size[-i] = int(size_str[-i])
+
+        final_data = self.hosts[host_name].mac + mac + data_size + [0]*8 + data
+        print(''.join([str(i) for i in final_data]))
+        self.send(host_name, final_data, len(final_data))
+
     def start(self, instructions):
         """
         Comienza la simulación dada una lista de instrucciones.
@@ -152,6 +172,9 @@ class NetSimulation():
             self.update()
         for device in self.devices.values():
             device.save_log(self.output_path)
+
+    def assign_mac_addres(self, host_name, mac):
+        self.hosts[host_name].mac = mac
 
     def update(self):
         """
@@ -177,10 +200,14 @@ class NetSimulation():
 
         for _ in range(len(self.devices)):
             for device in self.devices.values():
-                if device not in self.hosts.values():
+                if isinstance(device, Hub):
                     device.update(self.time)
+
+        for dev in self.devices.values():
+            if isinstance(dev, Switch):
+                dev.update(self.time)
 
         for host in self.hosts.values():
             host.receive()
-        
+
         self.time += 1

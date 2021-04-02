@@ -23,10 +23,11 @@ class Host(Device):
     """
 
     def __init__(self, name: str, signal_time: int):
-        ports = {f'{name}_1' : None}
-        super().__init__(name, ports)
         self.signal_time = signal_time
-        self.send_receiver: SendReceiver = None
+        self.mac = None
+        self.send_receiver = self.create_send_receiver()
+        ports = {f'{name}_1' : self.send_receiver}
+        super().__init__(name, ports)
 
     @property
     def cable_head(self):
@@ -40,20 +41,19 @@ class Host(Device):
 
     @property
     def is_active(self):
-        return self.send_receiver.is_sending or \
-               self.send_receiver.time_to_send
+        return self.send_receiver.is_active
 
     def update(self, time):
         super().update(time)
         self.send_receiver.update()
 
-    def send(self, data: List[int]):
+    def send(self, data: List[List[int]]):
         """
         Agrega nuevos datos para ser enviados a la lista de datos.
 
         Parameters
         ----------
-        data : List[int]
+        data : List[List[int]]
             Datos a ser enviados.
         """
         self.send_receiver.send(data)
@@ -71,37 +71,32 @@ class Host(Device):
         """
         self.send_receiver.receive()
 
-    def _create_send_receiver(self, cable_head: DuplexCableHead):
-        self.send_receiver = SendReceiver(self.signal_time, cable_head)
+    def create_send_receiver(self):
+        send_receiver = SendReceiver(self.signal_time)
 
-        self.send_receiver.on_send.append(
+        send_receiver.on_send.append(
             lambda bit: self.log(self.sim_time, 'Sent', f'{bit}')
         )
 
-        self.send_receiver.on_receive.append(
+        send_receiver.on_receive.append(
             lambda bit: self.log(self.sim_time, 'Received', f'{bit}')
         )
 
-        self.send_receiver.on_collision.append(
+        send_receiver.on_collision.append(
             lambda : self.log(self.sim_time,
                      'Collision',
-                     f'Waitting {self.send_receiver.time_to_send}ms to send')
+                     f'Waitting {send_receiver.time_to_send}ms to send')
         )
+        return send_receiver
 
     def connect(self, cable_head: DuplexCableHead, port_name: str):
-        if self.send_receiver is not None and \
-           self.send_receiver.cable_head is not None:
+        if self.send_receiver.cable_head is not None:
             raise ValueError(f'Port {port_name} is currently in use.')
 
-        if self.send_receiver is None:
-            self._create_send_receiver(cable_head)
-        else:
-            self.send_receiver.cable_head = cable_head
+        self.send_receiver.cable_head = cable_head
 
-        self.ports[self.port_name(1)] = self.send_receiver
         self.log(self.sim_time, 'Connected')
 
     def disconnect(self, port_name: str):
         self.send_receiver.disconnect()
-        super().disconnect(port_name)
         self.log(self.sim_time, 'Disconnected')

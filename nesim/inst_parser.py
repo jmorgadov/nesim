@@ -1,12 +1,18 @@
 from nesim.instructions import (
     CreateHostIns,
     CreateHubIns,
+    CreateSwitchIns,
+    MacIns,
     SendIns,
+    SendFrameIns,
     ConnectIns,
     DisconnectIns
 )
 from typing import List
 from pathlib import Path
+
+def to_binary(x: str, fmt: str = '016b'):
+    return format(int(x, base=16), fmt)
 
 def _parse_single_inst(inst_text: str):
 
@@ -20,6 +26,9 @@ def _parse_single_inst(inst_text: str):
         if device_type == 'hub':
             cant_ports = int(temp_line[4])
             return CreateHubIns(inst_time, device_name, cant_ports)
+        elif device_type == 'switch':
+            cant_ports = int(temp_line[4])
+            return CreateSwitchIns(inst_time, device_name, cant_ports)
         else:
             return CreateHostIns(inst_time, device_name)
 
@@ -32,6 +41,18 @@ def _parse_single_inst(inst_text: str):
         host_name = temp_line[2]
         data = [int(bit) for bit in temp_line[3]]
         return SendIns(inst_time, host_name, data)
+
+    elif inst_name == 'mac':
+        host_name = temp_line[2]
+        print(to_binary(temp_line[3]))
+        address = [int(i) for i in to_binary(temp_line[3])]
+        return MacIns(inst_time, host_name, address)
+
+    elif inst_name == 'send_frame':
+        host_name = temp_line[2]
+        mac = [int(i) for i in to_binary(temp_line[3])]
+        data = [int(i) for i in to_binary(temp_line[4])]
+        return SendFrameIns(inst_time, host_name, mac, data)
 
     else:
         port_name = temp_line[2]

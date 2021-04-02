@@ -25,6 +25,10 @@ class Hub(Device):
 
         super().__init__(name, ports)
 
+    @property
+    def is_active(self):
+        return False
+
     def reset(self):
         self._updating = False
         for _, cable_head in self.ports.items():
@@ -74,7 +78,7 @@ class Hub(Device):
         else:
             self.logs.append(log_msg)
 
-    def get_port_value(self, port_name: str):
+    def get_port_value(self, port_name: str, received: bool = True):
         """
         Devuelve el valor del cable conectado a un puerto dado. En caso de no
         tener un cable conectado devuelve ``'-'``.
@@ -84,16 +88,19 @@ class Hub(Device):
         port_name : str
             Nombre del puerto.
         """
+
         cable_head = self.ports[port_name]
         bit = None
         if cable_head is not None:
-            bit = cable_head.receive()
-
+            if received:
+                bit = cable_head.receive_value
+            else:
+                bit = cable_head.send_value
         return str(bit) if bit is not None else '-'
 
     def update(self, time):
         super().update(time)
-        p_data = [c.receive() for c in self.ports.values() if c is not None]
+        p_data = [c.receive_cable.value for c in self.ports.values() if c is not None]
         p_data_filt = [bit for bit in p_data if bit is not None]
 
         val = None
@@ -101,13 +108,15 @@ class Hub(Device):
             val = reduce(lambda x, y: x|y, p_data_filt)
 
         if not self._updating:
-            self._received = [self.get_port_value(p) for p in self.ports.keys()]        
+            self._received = [self.get_port_value(p) for p in self.ports]
 
         for _, cable_head in self.ports.items():
             if cable_head is not None:
                 cable_head.send(val)
 
         self._sent = [self.get_port_value(p) for p in self.ports.keys()]
+
+        self._sent = [self.get_port_value(p, False) for p in self.ports]
         self.special_log(time, self._received, self._sent)
         self._updating = True
 

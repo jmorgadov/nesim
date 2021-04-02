@@ -24,7 +24,7 @@ class DuplexCableHead():
 
     def receive(self):
         return self.receive_cable.value
-   
+
     @property
     def send_value(self):
         return self.send_cable.value
@@ -35,8 +35,9 @@ class DuplexCableHead():
 
 class Duplex():
 
-    def __init__(self):
-        c1, c2 = Cable(), Cable()
+    def __init__(self, simple=False):
+        c1 = Cable()        
+        c2 = Cable() if not simple else c1
         self.head_1 = DuplexCableHead(c1, c2)
         self.head_2 = DuplexCableHead(c2, c1)
 
