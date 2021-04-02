@@ -1,0 +1,5 @@
+Device
+======
+
+.. automodule:: device
+   :members:

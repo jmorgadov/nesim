@@ -6,19 +6,20 @@ from nesim.devices.cable import DuplexCableHead
 
 class SendReceiver():
     """
-    Representa una PC (Host).
+    Componente capaz de recibir y enviar información a través de un cable
+    duplex.
 
     Parameters
     ----------
-    name : str
-        Nombre de la PC.
     signal_time : int
         Tiempo mínimo que debe estar un bit en transmisión.
+    cable_head : DuplexCableHead
+        Extremo del cable duplex al que se encuentra conectado.
 
     Attributes
     ----------
     data : List[int]
-        Datos que debe enviar la PC.
+        Datos a enviar.
     """
 
     def __init__(self, signal_time: int, cable_head: DuplexCableHead = None):
@@ -105,13 +106,14 @@ class SendReceiver():
         """
         Lee del cable al que está conectado.
 
-        Si la PC se encuentra enviando infromación entonces comprueba que no
+        Si se encuentra enviando infromación entonces comprueba que no
         haya colisión.
 
-        En caso contrario almacena la lectura del cable en varios ocaciones
+        En caso contrario almacena la lectura del cable en varios ocasiones
         entre un ``SIGNAL_TIME`` y el siguiente. Al concluir el ``SIGNAL_TIME``
         se guarda como lectura final la moda de los datos almacenados.
         """
+
         if self.cable_head is None:
             return
 
@@ -153,6 +155,7 @@ class SendReceiver():
         bool
             ``True`` si hubo colisión, ``False`` en caso contrario.
         """
+
         if self.is_sending and self.cable_head.send_value != self.sending_bit:
             self.time_to_send = randint(1, self.max_time_to_send)
             self.readjust_max_time_to_send()

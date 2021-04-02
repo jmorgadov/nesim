@@ -1,8 +1,3 @@
-"""
-Estructuras básicas de cables para el manejo de las conexiones.
-"""
-
-
 class Cable():
     """
     Representa un cable físico.
