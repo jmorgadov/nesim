@@ -66,7 +66,7 @@ class SendReceiver():
                 self.cable_head.send(None)
 
     def update(self):
-        
+
         self.time_connected += 1
 
         if self.cable_head is None:
@@ -123,18 +123,16 @@ class SendReceiver():
                         self.current_package = []
                     self.send_time = 0
 
-        if self.is_sending:
-            return
-
-        elif self.time_connected % self.signal_time//3 == 0:
+        if self.time_connected % self.signal_time//3 == 0:
             bit = self.cable_head.receive()
             if bit is not None:
                 self.recived_bits.append(bit)
 
         if self.time_connected % self.signal_time == 0 and self.recived_bits:
             temp = [(v,k) for k,v in Counter(self.recived_bits).items()]
+            received = max(temp)[1]
             for act in self.on_receive:
-                act(max(temp)[1])
+                act(received)
             self.recived_bits = []
 
     def check_collision(self):

@@ -1,9 +1,12 @@
+from os import write
+from pathlib import Path
 from nesim.devices.send_receiver import SendReceiver
 from nesim.devices.device import Device
 from nesim.devices.cable import DuplexCableHead
 from random import randint
 from collections import Counter
 from typing import List
+from nesim.devices.utils import from_bit_data_to_number
 
 class Host(Device):
     """
@@ -27,7 +30,20 @@ class Host(Device):
         self.mac = None
         self.send_receiver = self.create_send_receiver()
         ports = {f'{name}_1' : self.send_receiver}
+
+        # Data receiving stuff
+        self.received_data = []
+        self.buffer = []
+        self.is_receiving_data = False
+        self.frame_start_index = 0
+        self.data_size = None
+        self.data_from = None
+
         super().__init__(name, ports)
+
+    @property
+    def str_mac(self):
+        return ''.join(map(str, self.mac))
 
     @property
     def cable_head(self):
@@ -42,6 +58,14 @@ class Host(Device):
     @property
     def is_active(self):
         return self.send_receiver.is_active
+
+    def save_log(self, path: str):
+        super().save_log(path=path)
+
+        output_path = Path(path) / Path(f'{self.name}_data.txt')
+        with open(output_path, 'w+') as f:            
+            data = [' '.join(map(str, d)) + '\n' for d in self.received_data]
+            f.writelines(data)
 
     def update(self, time):
         super().update(time)
@@ -71,6 +95,45 @@ class Host(Device):
         """
         self.send_receiver.receive()
 
+    def received_bit(self, bit):
+        self.log(self.sim_time, 'Received', f'{bit}')
+        self.buffer.append(bit)
+
+        if bit is None:
+            self.is_receiving_data = False
+            self.buffer = []
+            self.data_from = None
+            self.frame_start_index = 0
+            self.data_size = 0
+            return
+
+        if self.is_receiving_data:
+            received_size = len(self.buffer) - self.frame_start_index
+            fsi = self.frame_start_index
+            if received_size == 48:
+                _from = from_bit_data_to_number(
+                    self.buffer[fsi + 16:fsi + 32]
+                )
+                self.data_from = str(hex(_from))[2:].upper()
+                self.data_size = from_bit_data_to_number(
+                    self.buffer[fsi + 32:fsi + 40]
+                )
+            elif received_size > 48 and received_size == 48 + 8*self.data_size:
+                data = from_bit_data_to_number(self.buffer[fsi + 48:])
+                hex_data = str(hex(data))[2:].upper()
+                if len(hex_data) % 4 != 0:
+                    rest = 4 - len(hex_data) % 4
+                    hex_data = '0'*rest + hex_data
+                self.received_data.append(
+                    [self.sim_time, self.data_from, hex_data]
+                )
+
+        last = self.buffer[-16:]
+        if ''.join(map(str, last)) == self.str_mac:
+            self.is_receiving_data = True
+            self.frame_start_index = len(self.buffer) - 16
+
+
     def create_send_receiver(self):
         send_receiver = SendReceiver(self.signal_time)
 
@@ -79,7 +142,7 @@ class Host(Device):
         )
 
         send_receiver.on_receive.append(
-            lambda bit: self.log(self.sim_time, 'Received', f'{bit}')
+            lambda bit: self.received_bit(bit)
         )
 
         send_receiver.on_collision.append(

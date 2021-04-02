@@ -138,9 +138,9 @@ class Device(metaclass=abc.ABCMeta):
         path : str
             Ruta donde se guardarán los logs. (Por defecto en la raíz)
         """
-        
+
         output_folder = Path(path)
-        output_folder.mkdir(parents=True, exist_ok=True)        
+        output_folder.mkdir(parents=True, exist_ok=True)
         output_path = output_folder / Path(f'{self.name}.txt')
         with open(str(output_path), 'w+') as file:
             header = f'| {"Time (ms)": ^10} | {"Device":^12} | {"Action" :^14} | {"Info": ^30} |'
