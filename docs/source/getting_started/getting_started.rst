@@ -28,6 +28,18 @@ Crear hub
 
 Ejemplo: ``0 create hub H 4``
 
+Crear switch
+++++++++++++
+
+.. code-block:: shell
+    
+    <time> create switch <switch_name> <ports_count>
+
+* `switch_name` : Nombre del switch
+* `ports_count` : Cantidad de puertos
+
+Ejemplo: ``0 create switch S 4``
+
 Crear host
 ++++++++++
 
@@ -72,6 +84,31 @@ Desconectar
 * `port` : Puerto a desconectar.
 
 Ejemplo: ``0 disconnect PC_1``
+
+Asignar Mac
++++++++++++
+
+.. code-block:: shell
+    
+    <time> mac <host_name> <mac>
+
+* `host_name` : Nombre del host.
+* `mac` : Mac a asignar.
+
+Ejemplo: ``0 mac PC_1 000A``
+
+Enviar frame
+++++++++++++
+
+.. code-block:: shell
+    
+    <time> send_frame <host_name> <mac_dest> <data>
+
+* `host_name` : Nombre del host que envía.
+* `mac_dest` : Mac destino.
+* `data` : Información.
+
+Ejemplo: ``0 send_frame PC_1 1A03 028A7CCF``
 
 Cargar instrucciones
 --------------------
