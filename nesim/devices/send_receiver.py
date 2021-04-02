@@ -66,7 +66,6 @@ class SendReceiver():
                 self.cable_head.send(None)
 
     def update(self):
-
         self.time_connected += 1
 
         if self.cable_head is None:
@@ -83,7 +82,6 @@ class SendReceiver():
         if self.current_package:
             self.is_sending = True
             self.sending_bit = self.current_package[self.package_index]
-            # self.log(time, f'Trying to send {self.sending_bit}')
             self.cable_head.send(self.sending_bit)
 
 
@@ -109,6 +107,8 @@ class SendReceiver():
         entre un ``SIGNAL_TIME`` y el siguiente. Al concluir el ``SIGNAL_TIME``
         se guarda como lectura final la moda de los datos almacenados.
         """
+        if self.cable_head is None:
+            return
 
         if self.is_sending:
             coll = self.check_collision()
@@ -126,7 +126,7 @@ class SendReceiver():
 
             if self.cable_head.send_cable == self.cable_head.receive_cable:
                 return
-
+        
         if self.time_connected % self.signal_time//3 == 0:
             bit = self.cable_head.receive()
             if bit is not None:
@@ -162,12 +162,14 @@ class SendReceiver():
     def disconnect(self):
         if self.current_package:
             self.data.insert(0, self.current_package)
+        self.cable_head.receive_cable.value = None
+        self.cable_head.send_cable.value = None
         self.cable_head = None
         self.current_package = []
         self.package_index = 0
         self.is_sending = False
         self.send_time = 0
-        self.sending_bit = 0
+        self.sending_bit = None
         self.max_time_to_send = 16
         self.time_connected = 0
         self.recived_bits = []
