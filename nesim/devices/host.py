@@ -43,7 +43,8 @@ class Host(Device):
 
     @property
     def str_mac(self):
-        return ''.join(map(str, self.mac))
+        if self.mac is not None:
+            return ''.join(map(str, self.mac))
 
     @property
     def cable_head(self):
