@@ -5,7 +5,7 @@ Referencias del API
    :maxdepth: 2
    :caption: Contents:
 
-   devices
+   devices/devices
    instructions
    inst_parser
    simulation

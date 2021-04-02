@@ -1,8 +1,8 @@
 import abc
-import logging
-from nesim.devices.send_receiver import SendReceiver
 from pathlib import Path
 from typing import Dict
+import logging
+from nesim.devices.send_receiver import SendReceiver
 from nesim.devices.cable import DuplexCableHead
 
 
@@ -14,23 +14,23 @@ class Device(metaclass=abc.ABCMeta):
     ----------
     name : str
         Nombre del dispositivo.
-    ports : Dict[str, Cable]
+    ports : Dict[str, SendReceiver]
         Puertos del dispositivo.
 
-        Cada puerto está asociado a un cable. Si para un puerto dado el
-        cable asociado es ``None`` significa que este puerto no tiene ningún
-        cable conectado.
+        Cada puerto está asociado a un ``SendReceiver``. Si para un puerto
+        dado el cable asociado al ``SendReceiver`` es ``None`` significa
+        que este puerto no tiene ningún cable conectado.
 
     Attributes
     ----------
     name : str
         Nombre del dispositivo.
-    ports : Dict[str, Cable]
+    ports : Dict[str, SendReceiver]
         Puertos del dispositivo.
 
-        Cada puerto está asociado a un cable. Si para un puerto dado el
-        cable asociado es ```None`` significa que este puerto no tiene ningún
-        cable conectado.
+        Cada puerto está asociado a un ``SendReceiver``. Si para un puerto
+        dado el cable asociado al ``SendReceiver`` es ``None`` significa
+        que este puerto no tiene ningún cable conectado.
     logs : List[str]
         Logs del dispositivo.
     sim_time : int
@@ -47,7 +47,7 @@ class Device(metaclass=abc.ABCMeta):
 
     @abc.abstractproperty
     def is_active(self):
-        pass
+        """bool : Estado del dispositivo."""
 
     def port_name(self, port: int):
         """

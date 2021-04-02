@@ -1,12 +1,10 @@
-from os import write
+from typing import List
 from pathlib import Path
 from nesim.devices.send_receiver import SendReceiver
 from nesim.devices.device import Device
 from nesim.devices.cable import DuplexCableHead
-from random import randint
-from collections import Counter
-from typing import List
 from nesim.devices.utils import from_bit_data_to_number
+
 
 class Host(Device):
     """
@@ -43,6 +41,7 @@ class Host(Device):
 
     @property
     def str_mac(self):
+        """str : Dirección mac del host."""
         if self.mac is not None:
             return ''.join(map(str, self.mac))
 
@@ -54,19 +53,20 @@ class Host(Device):
     @property
     def is_connected(self):
         """bool : Estado de conección del host"""
-        return self.send_receiver is not None and self.send_receiver.cable_head is not None
+        return self.send_receiver is not None and \
+               self.send_receiver.cable_head is not None
 
     @property
     def is_active(self):
         return self.send_receiver.is_active
 
-    def save_log(self, path: str):
+    def save_log(self, path: str = ''):
         super().save_log(path=path)
 
         output_path = Path(path) / Path(f'{self.name}_data.txt')
-        with open(output_path, 'w+') as f:            
+        with open(output_path, 'w+') as data_file:
             data = [' '.join(map(str, d)) + '\n' for d in self.received_data]
-            f.writelines(data)
+            data_file.writelines(data)
 
     def update(self, time):
         super().update(time)
@@ -96,7 +96,18 @@ class Host(Device):
         """
         self.send_receiver.receive()
 
-    def received_bit(self, bit):
+    def received_bit(self, bit: int):
+        """
+        Se ejecuta cada vez que el host recibe un bit. Procesa la información
+        en el buffer para indentificar frames cuyo destino sea el host en
+        cuestión.
+
+        Parameters
+        ----------
+        bit : int
+            Bit recibido.
+        """
+
         self.log(self.sim_time, 'Received', f'{bit}')
         self.buffer.append(bit)
 
@@ -136,6 +147,14 @@ class Host(Device):
 
 
     def create_send_receiver(self):
+        """Crea un ``SendReceiver``.
+
+        Returns
+        -------
+        SendReceiver
+            ``SendReceiver`` creado.
+        """
+
         send_receiver = SendReceiver(self.signal_time)
 
         send_receiver.on_send.append(

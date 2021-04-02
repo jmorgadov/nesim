@@ -1,8 +1,8 @@
-from nesim.devices.device import Device
-from nesim.devices.cable import DuplexCableHead
 from functools import reduce
 from typing import List
 from pathlib import Path
+from nesim.devices.device import Device
+from nesim.devices.cable import DuplexCableHead
 
 class Hub(Device):
     """
@@ -37,7 +37,7 @@ class Hub(Device):
 
     def save_log(self, path=''):
         output_folder = Path(path)
-        output_folder.mkdir(parents=True, exist_ok=True)        
+        output_folder.mkdir(parents=True, exist_ok=True)
         output_path = output_folder / Path(f'{self.name}.txt')
         with open(str(output_path), 'w+') as file:
             header = f'| {"Time (ms)": ^10} |'
@@ -62,17 +62,17 @@ class Hub(Device):
         time : int
             Timepo de ejecución de la simulación.
         received : List[int]
-            Lista de bits recibidos por cada puerto.        
+            Lista de bits recibidos por cada puerto.
         sent : List[int]
             Lista de bits enviados por cada puerto.
         """
 
         log_msg = f'| {time: ^10} |'
-        for re, se in zip(received, sent):
-            if re == '-':
+        for bit_re, bit_se in zip(received, sent):
+            if bit_re == '-':
                 log_msg += f' {"---" : ^11} |'
             else:
-                log_msg += f' {re :>4} . {se: <4} |'
+                log_msg += f' {bit_re :>4} . {bit_se: <4} |'
         if self._updating:
             self.logs[-1] = log_msg
         else:
@@ -125,4 +125,4 @@ class Hub(Device):
         self.ports[port_name] = cable_head
 
     def disconnect(self, port_name: str):
-        return super().disconnect(port_name)
+        pass

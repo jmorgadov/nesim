@@ -3,23 +3,23 @@ from typing import List
 from collections import Counter
 from nesim.devices.cable import DuplexCableHead
 
-_PACKAGE_SIZE = 8
 
 class SendReceiver():
     """
-    Representa una PC (Host).
+    Componente capaz de recibir y enviar información a través de un cable
+    duplex.
 
     Parameters
     ----------
-    name : str
-        Nombre de la PC.
     signal_time : int
         Tiempo mínimo que debe estar un bit en transmisión.
+    cable_head : DuplexCableHead
+        Extremo del cable duplex al que se encuentra conectado.
 
     Attributes
     ----------
     data : List[int]
-        Datos que debe enviar la PC.
+        Datos a enviar.
     """
 
     def __init__(self, signal_time: int, cable_head: DuplexCableHead = None):
@@ -39,20 +39,22 @@ class SendReceiver():
 
     @property
     def is_active(self):
-        return self.is_sending or \
-               self.time_to_send
+        """bool : Estado del ``SendReceiver``."""
+        return self.is_sending or self.time_to_send
 
     def readjust_max_time_to_send(self):
         """
         Ajusta el tiempo máximo que será utilizado en la selección aleatoria
         de cuanto tiempo debe esperar para reintentar un envío.
         """
+
         self.max_time_to_send *= 2
 
     def load_package(self):
         """
         Carga el próximo paquete a enviar si hay datos.
         """
+
         if not self.current_package:
             if self.data:
                 self.current_package = self.data.pop(0)
@@ -66,6 +68,10 @@ class SendReceiver():
                 self.cable_head.send(None)
 
     def update(self):
+        """
+        Actualiza el estado de la información.
+        """
+
         self.time_connected += 1
 
         if self.cable_head is None:
@@ -100,13 +106,14 @@ class SendReceiver():
         """
         Lee del cable al que está conectado.
 
-        Si la PC se encuentra enviando infromación entonces comprueba que no
+        Si se encuentra enviando infromación entonces comprueba que no
         haya colisión.
 
-        En caso contrario almacena la lectura del cable en varios ocaciones
+        En caso contrario almacena la lectura del cable en varios ocasiones
         entre un ``SIGNAL_TIME`` y el siguiente. Al concluir el ``SIGNAL_TIME``
         se guarda como lectura final la moda de los datos almacenados.
         """
+
         if self.cable_head is None:
             return
 
@@ -126,7 +133,7 @@ class SendReceiver():
 
             if self.cable_head.send_cable == self.cable_head.receive_cable:
                 return
-        
+
         if self.time_connected % self.signal_time//3 == 0:
             bit = self.cable_head.receive()
             if bit is not None:
@@ -148,6 +155,7 @@ class SendReceiver():
         bool
             ``True`` si hubo colisión, ``False`` en caso contrario.
         """
+
         if self.is_sending and self.cable_head.send_value != self.sending_bit:
             self.time_to_send = randint(1, self.max_time_to_send)
             self.readjust_max_time_to_send()
@@ -160,11 +168,18 @@ class SendReceiver():
         return False
 
     def disconnect(self):
-        if self.current_package:
-            self.data.insert(0, self.current_package)
+        """
+        Desconecta el ``SendReceiver``.
+        """
+
+        # Reset data in cable head
         self.cable_head.receive_cable.value = None
         self.cable_head.send_cable.value = None
         self.cable_head = None
+
+        # Reset sending info
+        if self.current_package:
+            self.data.insert(0, self.current_package)
         self.current_package = []
         self.package_index = 0
         self.is_sending = False
