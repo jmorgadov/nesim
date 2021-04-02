@@ -1,7 +1,7 @@
+from typing import Dict, List
 from nesim.devices.switch import Switch
 from nesim.devices.hub import Hub
-from typing import Dict, List
-from nesim.devices import Device, Duplex, Host, Cable
+from nesim.devices import Device, Duplex, Host
 import nesim.utils as utils
 
 
@@ -93,8 +93,8 @@ class NetSimulation():
         cab = Duplex(simple=is_simple)
         dev1.sim_time = self.time
         dev2.sim_time = self.time
-        self.port_to_device[port1].connect(cab.h1, port1)
-        self.port_to_device[port2].connect(cab.h2, port2)
+        self.port_to_device[port1].connect(cab.head_1, port1)
+        self.port_to_device[port2].connect(cab.head_2, port2)
 
     def send(self, host_name: str, data: List[int],
              package_size: int = 8):
@@ -160,6 +160,20 @@ class NetSimulation():
 
 
     def send_frame(self, host_name: str, mac: List[int], data: List[int]):
+        """
+        Ordena a un host a enviar un frame determinado a una dirección mac
+        determinada.
+
+        Parameters
+        ----------
+        host_name : str
+            Nombre del host que envía la información.
+        mac : List[int]
+            Mac destino.
+        data : List[int]
+            Frame a enviar.
+        """
+
         size_str = f'{len(data)//8:b}'
         data_size = [0]*8
 
@@ -188,6 +202,17 @@ class NetSimulation():
             device.save_log(self.output_path)
 
     def assign_mac_addres(self, host_name, mac):
+        """
+        Asigna una dirección mac a un host.
+
+        Parameters
+        ----------
+        host_name : str
+            Nombre del host al cual se le asigna la dirección mac.
+        mac : List[int]
+            Dirección mac.
+        """
+
         self.hosts[host_name].mac = mac
 
     def update(self):

@@ -1,11 +1,22 @@
 from typing import Dict, List
+from pathlib import Path
 from nesim.devices.send_receiver import SendReceiver
 from nesim.devices.cable import DuplexCableHead
 from nesim.devices.device import Device
 from nesim.devices.utils import from_bit_data_to_number
-from pathlib import Path
 
 class Switch(Device):
+    """Representa un switch en la simulación.
+
+    Parameters
+    ----------
+    name : str
+        Nombre del switch
+    ports_count : int
+        Cantidad de puertos
+    signal_time : int
+        ``Signal time`` de la simulación
+    """
 
     def __init__(self, name: str, ports_count: int, signal_time: int):
         self.signa_time = signal_time
@@ -19,11 +30,12 @@ class Switch(Device):
 
     @property
     def is_active(self):
+        """bool : Estado del switch"""
         return any([sr.is_active for sr in self.ports.values()])
 
     def save_log(self, path=''):
         output_folder = Path(path)
-        output_folder.mkdir(parents=True, exist_ok=True)        
+        output_folder.mkdir(parents=True, exist_ok=True)
         output_path = output_folder / Path(f'{self.name}.txt')
         with open(str(output_path), 'w+') as file:
             header = f'| {"Time (ms)": ^10} |'
@@ -48,20 +60,30 @@ class Switch(Device):
         time : int
             Timepo de ejecución de la simulación.
         received : List[int]
-            Lista de bits recibidos por cada puerto.        
+            Lista de bits recibidos por cada puerto.
         sent : List[int]
             Lista de bits enviados por cada puerto.
         """
 
         log_msg = f'| {time: ^10} |'
-        for re, se in zip(received, sent):
-            if re == '-'  and se == '-':
+        for bit_re, bit_se in zip(received, sent):
+            if bit_re == '-'  and bit_se == '-':
                 log_msg += f' {"---" : ^11} |'
             else:
-                log_msg += f' {re :>4} . {se: <4} |'
+                log_msg += f' {bit_re :>4} . {bit_se: <4} |'
         self.logs.append(log_msg)
 
     def broadcast(self, from_port, data):
+        """Envia un frame por todos los puertos.
+
+        Parameters
+        ----------
+        from_port : str
+            Puerto del cual se transmite la información.
+        data : List[List[int]]
+            Frame a ser enviado.
+        """
+
         for port, send_receiver in self.ports.items():
             if port != from_port and send_receiver.cable_head is not None:
                 send_receiver.send(data)
@@ -83,6 +105,14 @@ class Switch(Device):
         super().update(time)
 
     def handle_buffer_data(self, port):
+        """Se encarga de procesar los datos en el buffer de un puerto.
+
+        Parameters
+        ----------
+        port : str
+            Nombre del puerto
+        """
+
         data = self.ports_buffer[port]
 
         if len(data) < 40:
@@ -123,21 +153,46 @@ class Switch(Device):
                 bit = send_receiver.cable_head.send_value
         return str(bit) if bit is not None else '-'
 
-    def receive_on_port(self, port, bit):
+    def receive_on_port(self, port: str, bit: int):
+        """Guarda el bit recibido en un puerto y procesa los datos del mismo.
+
+        Parameters
+        ----------
+        port : str
+            Nombre del puerto.
+        bit : int
+            Bit recibido
+        """
+
         self.ports_buffer[port].append(bit)
         self.handle_buffer_data(port)
 
-    def create_send_receiver(self, port, cable_head: DuplexCableHead = None):
-        sr = SendReceiver(self.signa_time, cable_head)
-        sr.on_receive.append(lambda bit : self.receive_on_port(port, bit))
-        return sr
+    def create_send_receiver(self, port: str):
+        """Crea un ``SendReceiver``.
+
+        Parameters
+        ----------
+        port : str
+            Puerto al que será asignado el ``SendReceiver``.
+
+        Returns
+        -------
+        SendReceiver
+            ``SendReceiver`` creado.
+        """
+
+        send_receiver = SendReceiver(self.signa_time, None)
+        send_receiver.on_receive.append(
+            lambda bit : self.receive_on_port(port, bit)
+        )
+        return send_receiver
 
     def connect(self, cable_head: DuplexCableHead, port_name: str):
-        sr = self.ports[port_name]
-        if sr.cable_head is not None:
+        send_receiver = self.ports[port_name]
+        if send_receiver.cable_head is not None:
             raise ValueError(f'Port {port_name} is currently in use.')
 
-        sr.cable_head = cable_head
+        send_receiver.cable_head = cable_head
 
     def disconnect(self, port_name: str):
         self.ports_buffer[list(self.ports.keys()).index(port_name)] = []

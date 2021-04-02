@@ -1,3 +1,5 @@
+from typing import List
+from pathlib import Path
 from nesim.instructions import (
     CreateHostIns,
     CreateHubIns,
@@ -8,11 +10,24 @@ from nesim.instructions import (
     ConnectIns,
     DisconnectIns
 )
-from typing import List
-from pathlib import Path
 
-def to_binary(x: str, fmt: str = '016b'):
-    return format(int(x, base=16), fmt)
+def to_binary(hex_num: str, fmt: str = '016b'):
+    """Convierte una representación hexagesimal a binaria.
+
+    Parameters
+    ----------
+    hex_num : str
+        Número hexagesimal.
+    fmt : str, optional
+        Formato usado para convertir, por defecto ``016b``.
+
+    Returns
+    -------
+    str
+        Número convertido.
+    """
+
+    return format(int(hex_num, base=16), fmt)
 
 def _parse_single_inst(inst_text: str):
 
