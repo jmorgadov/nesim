@@ -123,6 +123,9 @@ class SendReceiver():
                         self.current_package = []
                     self.send_time = 0
 
+            if self.cable_head.send_cable == self.cable_head.receive_cable:
+                return
+
         if self.time_connected % self.signal_time//3 == 0:
             bit = self.cable_head.receive()
             if bit is not None:
