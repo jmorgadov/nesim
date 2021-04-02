@@ -24,7 +24,7 @@ copyright = '2021, Jorge Morgado, Roberto García'
 author = 'Jorge Morgado, Roberto García'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.4'
+release = '0.1.0'
 
 
 # -- General configuration ---------------------------------------------------
