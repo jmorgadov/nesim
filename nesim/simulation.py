@@ -89,7 +89,8 @@ class NetSimulation():
             self.disconnected_devices.pop(dev2.name)
             self.add_device(dev2)
 
-        cab = Duplex()
+        is_simple = isinstance(dev1, Hub) or isinstance(dev2, Hub)
+        cab = Duplex(simple=is_simple)
         dev1.sim_time = self.time
         dev2.sim_time = self.time
         self.port_to_device[port1].connect(cab.h1, port1)

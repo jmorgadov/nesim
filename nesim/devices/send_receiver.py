@@ -61,11 +61,14 @@ class SendReceiver():
                 self.send_time = 0
                 self.is_sending = True
             elif self.is_sending:
-                self.sending_bit = 0
+                self.sending_bit = None
                 self.is_sending = False
                 self.cable_head.send(None)
 
     def update(self):
+        
+        self.time_connected += 1
+
         if self.cable_head is None:
             return
 
@@ -83,7 +86,6 @@ class SendReceiver():
             # self.log(time, f'Trying to send {self.sending_bit}')
             self.cable_head.send(self.sending_bit)
 
-        self.time_connected += 1
 
     def send(self, data: List[List[int]]):
         """
@@ -118,7 +120,7 @@ class SendReceiver():
                 if self.send_time == self.signal_time:
                     self.package_index += 1
                     if self.package_index == len(self.current_package):
-                        self.current_package = []              
+                        self.current_package = []
                     self.send_time = 0
 
         if self.is_sending:
