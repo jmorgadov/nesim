@@ -137,13 +137,27 @@ class NetSimulation():
 
         if dev.name in self.hosts.keys():
             self.hosts.pop(dev.name)
-
-        for cable in dev.ports.values():
-            if cable is not None:
-                break
-        else:
             self.devices.pop(dev.name)
             self.disconnected_devices[dev.name] = dev
+            return
+
+        if isinstance(dev, Hub):
+            for cable in dev.ports.values():
+                if cable is not None:
+                    break
+            else:
+                self.devices.pop(dev.name)
+                self.disconnected_devices[dev.name] = dev
+
+        if isinstance(dev, Switch):
+            for send_receiver in dev.ports.values():
+                if send_receiver.cable_head is not None:
+                    break
+            else:
+                self.devices.pop(dev.name)
+                self.disconnected_devices[dev.name] = dev
+
+
 
     def send_frame(self, host_name: str, mac: List[int], data: List[int]):
         size_str = f'{len(data)//8:b}'
@@ -152,8 +166,8 @@ class NetSimulation():
         for i in range(1,len(size_str) + 1):
             data_size[-i] = int(size_str[-i])
 
-        final_data = self.hosts[host_name].mac + mac + data_size + [0]*8 + data
-        print(''.join([str(i) for i in final_data]))
+        final_data = mac + self.hosts[host_name].mac + data_size + [0]*8 + data
+
         self.send(host_name, final_data, len(final_data))
 
     def start(self, instructions):
@@ -183,8 +197,7 @@ class NetSimulation():
 
         Esta función se ejecuta una vez por cada milisegundo simulado.
         """
-        
-        # print(self.time, self.devices)
+
         current_insts = []
         while self.instructions and self.time == self.instructions[0].time:
             current_insts.append(self.instructions.pop(0))

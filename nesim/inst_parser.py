@@ -44,7 +44,6 @@ def _parse_single_inst(inst_text: str):
 
     elif inst_name == 'mac':
         host_name = temp_line[2]
-        print(to_binary(temp_line[3]))
         address = [int(i) for i in to_binary(temp_line[3])]
         return MacIns(inst_time, host_name, address)
 
@@ -87,13 +86,13 @@ def load_instructions(inst_path: str = './script.txt'):
     -------
     List[Instruction]
         Lista de instrucciones cargadas del archivo.
-    
+
     Raises
     ------
     ValueError
         Si la ruta del archivo es inválida.
     """
-    print('asd')
+
     path = Path(inst_path)
     if path.exists():
         raw_inst = []
