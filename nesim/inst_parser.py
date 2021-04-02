@@ -11,7 +11,7 @@ from nesim.instructions import (
     DisconnectIns
 )
 
-def to_binary(hex_num: str, fmt: str = '016b'):
+def _to_binary(hex_num: str, fmt: str = '016b'):
     """Convierte una representación hexagesimal a binaria.
 
     Parameters
@@ -59,13 +59,13 @@ def _parse_single_inst(inst_text: str):
 
     elif inst_name == 'mac':
         host_name = temp_line[2]
-        address = [int(i) for i in to_binary(temp_line[3])]
+        address = [int(i) for i in _to_binary(temp_line[3])]
         return MacIns(inst_time, host_name, address)
 
     elif inst_name == 'send_frame':
         host_name = temp_line[2]
-        mac = [int(i) for i in to_binary(temp_line[3])]
-        data = [int(i) for i in to_binary(temp_line[4])]
+        mac = [int(i) for i in _to_binary(temp_line[3])]
+        data = [int(i) for i in _to_binary(temp_line[4])]
         return SendFrameIns(inst_time, host_name, mac, data)
 
     else:
