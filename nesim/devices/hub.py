@@ -100,7 +100,8 @@ class Hub(Device):
 
     def update(self, time):
         super().update(time)
-        p_data = [c.receive_cable.value for c in self.ports.values() if c is not None]
+        p_data = [c.receive_cable.value for c in self.ports.values() \
+                  if c is not None]
         p_data_filt = [bit for bit in p_data if bit is not None]
 
         val = None
