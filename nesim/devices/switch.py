@@ -115,12 +115,13 @@ class Switch(Device):
 
         data = self.ports_buffer[port]
 
-        if len(data) < 40:
+        if len(data) < 48:
             return
 
         to_mac = from_bit_data_to_number(data[:16])
         from_mac = from_bit_data_to_number(data[16:32])
         size = from_bit_data_to_number(data[32:40]) * 8
+        size += from_bit_data_to_number(data[40:48]) * 8
 
         if len(data) - 48 < size:
             return

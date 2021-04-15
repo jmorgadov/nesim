@@ -2,6 +2,7 @@ from typing import Dict, List
 from nesim.devices.switch import Switch
 from nesim.devices.hub import Hub
 from nesim.devices import Device, Duplex, Host
+from nesim.devices.error_detection import get_error_detection_data
 import nesim.utils as utils
 
 
@@ -180,7 +181,15 @@ class NetSimulation():
         for i in range(1,len(size_str) + 1):
             data_size[-i] = int(size_str[-i])
 
-        final_data = mac + self.hosts[host_name].mac + data_size + [0]*8 + data
+        e_size, e_data = get_error_detection_data(data, utils.CONFIG['error_detection'])
+
+
+        final_data = mac + \
+                     self.hosts[host_name].mac + \
+                     data_size + \
+                     e_size + \
+                     data + \
+                     e_data
 
         self.send(host_name, final_data, len(final_data))
 
