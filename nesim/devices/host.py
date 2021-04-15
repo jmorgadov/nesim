@@ -1,10 +1,11 @@
-from typing import List
+from typing import List, Tuple
 from pathlib import Path
 from nesim.devices.send_receiver import SendReceiver
 from nesim.devices.device import Device
 from nesim.devices.cable import DuplexCableHead
 from nesim.devices.utils import from_bit_data_to_number
-
+from nesim.devices.error_detection import check_frame_correction
+import nesim.utils as utils
 
 class Host(Device):
     """
@@ -35,6 +36,7 @@ class Host(Device):
         self.is_receiving_data = False
         self.frame_start_index = 0
         self.data_size = None
+        self.data_error_size = None
         self.data_from = None
 
         super().__init__(name, ports)
@@ -81,6 +83,7 @@ class Host(Device):
         data : List[List[int]]
             Datos a ser enviados.
         """
+
         self.send_receiver.send(data)
 
     def receive(self):
@@ -95,6 +98,11 @@ class Host(Device):
         se guarda como lectura final la moda de los datos almacenados.
         """
         self.send_receiver.receive()
+
+    def check_errors(self, frame) -> Tuple[List[int], bool]:
+        utils.check_config()
+        error_det_algorith = utils.CONFIG['error_detection']
+        return check_frame_correction(frame, error_det_algorith)
 
     def received_bit(self, bit: int):
         """
@@ -130,15 +138,21 @@ class Host(Device):
                 self.data_size = from_bit_data_to_number(
                     self.buffer[fsi + 32:fsi + 40]
                 )
-            elif received_size > 48 and received_size == 48 + 8*self.data_size:
-                data = from_bit_data_to_number(self.buffer[fsi + 48:])
+                self.data_error_size = from_bit_data_to_number(
+                    self.buffer[fsi + 40:fsi + 48]
+                )
+            elif received_size > 48 and \
+                received_size == fsi + 48 + 8*self.data_size + 8*self.data_error_size:
+                frame, error = self.check_errors(self.buffer[fsi:])
+                data = from_bit_data_to_number(frame[48:48+8*self.data_size])
                 hex_data = str(hex(data))[2:].upper()
                 if len(hex_data) % 4 != 0:
                     rest = 4 - len(hex_data) % 4
                     hex_data = '0'*rest + hex_data
-                self.received_data.append(
-                    [self.sim_time, self.data_from, hex_data]
-                )
+                r_data = [self.sim_time, self.data_from, hex_data]
+                if error:
+                    r_data.append('ERROR')
+                self.received_data.append(r_data)
 
         last = self.buffer[-16:]
         if ''.join(map(str, last)) == self.str_mac:
