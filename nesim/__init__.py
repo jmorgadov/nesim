@@ -22,7 +22,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-__version__ = '0.0.4'
+__version__ = '0.0.5'
 
 __all__ = [
     'parse_instructions',

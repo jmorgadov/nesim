@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nesim"
-version = "0.0.4"
+version = "0.0.5"
 description = "Paquete de python que permite simular de una red de computadoras."
 authors = [
     "Jorge Morgado Vega <jorge.morgadov@gmail.com>",
