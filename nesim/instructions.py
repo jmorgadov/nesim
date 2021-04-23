@@ -3,7 +3,6 @@ import nesim.simulation as sim
 import nesim.devices as dv
 from typing import List
 
-
 class Instruction(metaclass=abc.ABCMeta):
     """
     Representación general de una instrucción.
