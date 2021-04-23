@@ -74,6 +74,21 @@ Enviar
 
 Ejemplo: ``0 send PC 10111010``
 
+Enviar Frame
+++++++++++++
+
+.. code-block:: shell
+    
+    <time> send_frame <host_name> <destiny_mac> <hex_data>
+
+* `host_name` : Nombre del host que enviará la información.
+* `destiny_mac` : Dirección MAC destino.
+* `hex_data` : Serie de bits a evniar en hexagesimal.
+
+Ejemplo: ``0 send_frame PC 03EC F2CC48A3``
+
+Al enviar un frame existe la probabilidad que los datos cambien debido a la simulación de errores. Esta probabilidad es bastante baja y será señalado por cada frame si existe en el log de los datos recibidos de cada host.
+
 Desconectar
 +++++++++++
 
@@ -168,7 +183,12 @@ El tiempo de señal (``signal_time``) define cuantos milisegundos debe estar en 
 Archivo de configuración
 ------------------------
 
-Al comenzar una simulación se carga un archivo llamado ``config.txt`` (En caso de no existir se crea uno por defecto). Este archivo contiene la configuración básica para las simulaciones. Cada línea de este archivo contiene un par (``key`` ``value``) donde cada llave representa el nombre de uno de los parámetros a configurar y a su lado el valor correspondiente. Por ahora el único parámetro a configurar es el ``signal_time`` cuyo valor por defecto es 10.
+Al comenzar una simulación se carga un archivo llamado ``config.txt`` (En caso de no existir se crea uno por defecto). Este archivo contiene la configuración básica para las simulaciones. Cada línea de este archivo contiene un par (``key`` ``value``) donde cada llave representa el nombre de uno de los parámetros a configurar y a su lado el valor correspondiente. Los parametros modificables son:
+
+ - ``signal_time``, cuyo valor por defecto es ``10``.
+ - ``error_detection``, cuyo valor por defecto es ``simple_hash``.
+
+El parámetro ``error_detection`` por ahora solo puede tener como valor ``simple_hash``, pero en futuras versiones tendrá otros algoritmos.
 
 Logs
 ----

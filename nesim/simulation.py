@@ -1,3 +1,4 @@
+from random import random, randint
 from typing import Dict, List
 from nesim.devices.switch import Switch
 from nesim.devices.hub import Hub
@@ -183,6 +184,11 @@ class NetSimulation():
 
         e_size, e_data = get_error_detection_data(data, utils.CONFIG['error_detection'])
 
+
+        rand = random()
+        if rand < 1e-3:
+            ind = randint(0, len(data) - 1)
+            data[ind] = (data[ind] + 1) % 2
 
         final_data = mac + \
                      self.hosts[host_name].mac + \

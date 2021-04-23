@@ -153,6 +153,7 @@ class Host(Device):
                 if error:
                     r_data.append('ERROR')
                 self.received_data.append(r_data)
+                self.buffer = []
 
         last = self.buffer[-16:]
         if ''.join(map(str, last)) == self.str_mac:

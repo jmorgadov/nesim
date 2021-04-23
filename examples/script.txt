@@ -5,4 +5,7 @@
 0 connect PCB_1 S_2
 0 mac PCA 000A
 0 mac PCB 000B
-0 send_frame PCA 000B 0000
+0 send_frame PCA 000B CAFE
+0 send_frame PCB 000A FAFA
+15 send_frame PCA 000B CAFE
+19 send_frame PCA 000B CAFE
