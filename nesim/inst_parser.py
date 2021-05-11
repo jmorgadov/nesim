@@ -1,9 +1,11 @@
+from nesim.ip import IP
 from typing import List
 from pathlib import Path
 from nesim.instructions import (
     CreateHostIns,
     CreateHubIns,
     CreateSwitchIns,
+    IPIns,
     MacIns,
     SendIns,
     SendFrameIns,
@@ -61,6 +63,12 @@ def _parse_single_inst(inst_text: str):
         host_name = temp_line[2]
         address = [int(i) for i in _to_binary(temp_line[3])]
         return MacIns(inst_time, host_name, address)
+    
+    elif inst_name == 'ip':
+        host_name = temp_line[2]
+        ip = IP.from_str(temp_line[3])
+        mask = IP.from_str(temp_line[4])
+        return IPIns(inst_time, host_name, ip, mask)
 
     elif inst_name == 'send_frame':
         host_name = temp_line[2]

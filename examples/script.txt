@@ -1,6 +1,8 @@
 0 create switch S 4
 0 create host PCA
 0 create host PCB
+0 ip PCA 192.168.100.1 255.255.255.0
+0 ip PCB 192.168.100.1 255.255.255.0
 0 connect PCA_1 S_1
 0 connect PCB_1 S_2
 0 mac PCA 000A

@@ -5,6 +5,7 @@ from nesim.devices.device import Device
 from nesim.devices.cable import DuplexCableHead
 from nesim.devices.utils import from_bit_data_to_number
 from nesim.devices.error_detection import check_frame_correction
+from nesim.ip import IP
 import nesim.utils as utils
 
 class Host(Device):
@@ -26,7 +27,9 @@ class Host(Device):
 
     def __init__(self, name: str, signal_time: int):
         self.signal_time = signal_time
-        self.mac = None
+        self.mac: IP = None
+        self.ip: IP = None
+        self.ip_mask = None
         self.send_receiver = self.create_send_receiver()
         ports = {f'{name}_1' : self.send_receiver}
 
@@ -61,6 +64,22 @@ class Host(Device):
     @property
     def is_active(self):
         return self.send_receiver.is_active
+    
+    def check_subnet(self, subnet_ip: IP) -> bool:
+        """Checks if the host belogns to a given subnet
+
+        Parameters
+        ----------
+        subnet_ip : IP
+            Subnet IP
+
+        Returns
+        -------
+        bool
+            True if the host belongs to the subnet
+        """
+        
+        return self.ip.check_subnet(subnet_ip, self.ip_mask)
 
     def save_log(self, path: str = ''):
         super().save_log(path=path)

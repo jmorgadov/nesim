@@ -1,3 +1,4 @@
+from nesim.ip import IP
 from random import random, randint
 from typing import Dict, List
 from nesim.devices.switch import Switch
@@ -215,6 +216,8 @@ class NetSimulation():
             self.update()
         for device in self.devices.values():
             device.save_log(self.output_path)
+        for host in self.hosts.values():
+            print(host.ip, host.ip_mask)
 
     def assign_mac_addres(self, host_name, mac):
         """
@@ -229,6 +232,21 @@ class NetSimulation():
         """
 
         self.hosts[host_name].mac = mac
+
+    def assign_ip_addres(self, host_name, ip: IP, mask: IP):
+        """
+        Asigna una dirección mac a un host.
+
+        Parameters
+        ----------
+        host_name : str
+            Nombre del host al cual se le asigna la dirección mac.
+        mac : List[int]
+            Dirección mac.
+        """
+
+        self.hosts[host_name].ip = ip
+        self.hosts[host_name].ip_mask = mask
 
     def update(self):
         """

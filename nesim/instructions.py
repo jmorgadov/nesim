@@ -1,4 +1,5 @@
 import abc
+from nesim.ip import IP
 import nesim.simulation as sim
 import nesim.devices as dv
 from typing import List
@@ -171,9 +172,19 @@ class MacIns(Instruction):
         super().__init__(time)
         self.host_name = host_name
         self.address = address
-    
+
     def execute(self, net_sim: sim.NetSimulation):
         net_sim.assign_mac_addres(self.host_name, self.address)
+
+class IPIns(Instruction):
+    def __init__(self, time: int, host_name: str, ip: IP, mask: IP):
+        super().__init__(time)
+        self.host_name = host_name
+        self.ip = ip
+        self.mask = mask
+
+    def execute(self, net_sim: sim.NetSimulation):
+        net_sim.assign_ip_addres(self.host_name, self.ip, self.mask)
 
 class SendFrameIns(Instruction):
     def __init__(self, time: int, host_name: str, mac: List[int],
