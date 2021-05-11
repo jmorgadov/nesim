@@ -112,15 +112,37 @@ class NetSimulation():
             Datos a enviar.
         """
 
-        packages = []
-        while data:
-            packages.append(data[:package_size])
-            data = data[package_size:]
+        if host_name not in self.hosts.keys():
+            raise ValueError(f'Unknown host {host_name}')
+
+        self.hosts[host_name].send(data, package_size)
+
+    def send_frame(self, host_name: str, mac: List[int], data: List[int]):
+        """
+        Ordena a un host a enviar un frame determinado a una dirección mac
+        determinada.
+
+        Parameters
+        ----------
+        host_name : str
+            Nombre del host que envía la información.
+        mac : List[int]
+            Mac destino.
+        data : List[int]
+            Frame a enviar.
+        """
 
         if host_name not in self.hosts.keys():
             raise ValueError(f'Unknown host {host_name}')
 
-        self.hosts[host_name].send(packages)
+        self.hosts[host_name].send_frame(mac, data)
+
+    def send_ip_package(self, host_name: str, ip_dest: IP, data: List[int]):
+
+        if host_name not in self.hosts.keys():
+            raise ValueError(f'Unknown host {host_name}')
+
+        self.hosts[host_name].send_ip_package(ip_dest, data)
 
     def disconnect(self, port: str):
         """
@@ -159,46 +181,6 @@ class NetSimulation():
             else:
                 self.devices.pop(dev.name)
                 self.disconnected_devices[dev.name] = dev
-
-
-
-    def send_frame(self, host_name: str, mac: List[int], data: List[int]):
-        """
-        Ordena a un host a enviar un frame determinado a una dirección mac
-        determinada.
-
-        Parameters
-        ----------
-        host_name : str
-            Nombre del host que envía la información.
-        mac : List[int]
-            Mac destino.
-        data : List[int]
-            Frame a enviar.
-        """
-
-        size_str = f'{len(data)//8:b}'
-        data_size = [0]*8
-
-        for i in range(1,len(size_str) + 1):
-            data_size[-i] = int(size_str[-i])
-
-        e_size, e_data = get_error_detection_data(data, utils.CONFIG['error_detection'])
-
-
-        rand = random()
-        if rand < 1e-3:
-            ind = randint(0, len(data) - 1)
-            data[ind] = (data[ind] + 1) % 2
-
-        final_data = mac + \
-                     self.hosts[host_name].mac + \
-                     data_size + \
-                     e_size + \
-                     data + \
-                     e_data
-
-        self.send(host_name, final_data, len(final_data))
 
     def start(self, instructions):
         """

@@ -6,7 +6,7 @@ from nesim.instructions import (
     CreateHubIns,
     CreateSwitchIns,
     IPIns,
-    MacIns,
+    MacIns, SendIPPackage,
     SendIns,
     SendFrameIns,
     ConnectIns,
@@ -63,7 +63,7 @@ def _parse_single_inst(inst_text: str):
         host_name = temp_line[2]
         address = [int(i) for i in _to_binary(temp_line[3])]
         return MacIns(inst_time, host_name, address)
-    
+
     elif inst_name == 'ip':
         host_name = temp_line[2]
         ip = IP.from_str(temp_line[3])
@@ -75,6 +75,12 @@ def _parse_single_inst(inst_text: str):
         mac = [int(i) for i in _to_binary(temp_line[3])]
         data = [int(i) for i in _to_binary(temp_line[4])]
         return SendFrameIns(inst_time, host_name, mac, data)
+
+    elif inst_name == 'send_packet':
+        host_name = temp_line[2]
+        ip = IP.from_str(temp_line[3])
+        data = [int(i) for i in _to_binary(temp_line[4])]
+        return SendIPPackage(inst_time, host_name, ip, data)
 
     else:
         port_name = temp_line[2]

@@ -2,12 +2,9 @@
 0 create host PCA
 0 create host PCB
 0 ip PCA 192.168.100.1 255.255.255.0
-0 ip PCB 192.168.100.1 255.255.255.0
+0 ip PCB 192.168.100.2 255.255.255.0
 0 connect PCA_1 S_1
 0 connect PCB_1 S_2
 0 mac PCA 000A
 0 mac PCB 000B
-0 send_frame PCA 000B CAFE
-0 send_frame PCB 000A FAFA
-15 send_frame PCA 000B CAFE
-19 send_frame PCA 000B CAFE
+10 send_packet PCA 192.168.100.2 CAFE

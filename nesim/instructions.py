@@ -196,3 +196,14 @@ class SendFrameIns(Instruction):
 
     def execute(self, net_sim: sim.NetSimulation):
         net_sim.send_frame(self.host_name, self.mac, self.data)
+
+class SendIPPackage(Instruction):
+    def __init__(self, time: int, host_name: str, ip_dest: IP,
+                 data: List[int]):
+        super().__init__(time)
+        self.host_name = host_name
+        self.ip = ip_dest
+        self.data = data
+
+    def execute(self, net_sim: sim.NetSimulation):
+        net_sim.send_ip_package(self.host_name, self.ip, self.data)
