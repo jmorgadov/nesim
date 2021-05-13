@@ -168,20 +168,22 @@ class DisconnectIns(Instruction):
 
 
 class MacIns(Instruction):
-    def __init__(self, time: int, host_name: str, address: List[int]):
+    def __init__(self, time: int, host_name: str, interfase: int, address: List[int]):
         super().__init__(time)
         self.host_name = host_name
         self.address = address
+        self.interfase = interfase
 
     def execute(self, net_sim: sim.NetSimulation):
         net_sim.assign_mac_addres(self.host_name, self.address)
 
 class IPIns(Instruction):
-    def __init__(self, time: int, host_name: str, ip: IP, mask: IP):
+    def __init__(self, time: int, host_name: str, interfase: int, ip: IP, mask: IP):
         super().__init__(time)
         self.host_name = host_name
         self.ip = ip
         self.mask = mask
+        self.interfase = interfase
 
     def execute(self, net_sim: sim.NetSimulation):
         net_sim.assign_ip_addres(self.host_name, self.ip, self.mask)

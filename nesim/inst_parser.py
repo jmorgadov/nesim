@@ -61,14 +61,22 @@ def _parse_single_inst(inst_text: str):
 
     elif inst_name == 'mac':
         host_name = temp_line[2]
+        interfase = 1
+        if ':' in host_name:
+            host_name, interfase_str = host_name.split(':')
+            interfase = int(interfase_str)
         address = [int(i) for i in _to_binary(temp_line[3])]
-        return MacIns(inst_time, host_name, address)
+        return MacIns(inst_time, host_name, interfase, address)
 
     elif inst_name == 'ip':
         host_name = temp_line[2]
+        interfase = 1
+        if ':' in host_name:
+            host_name, interfase_str = host_name.split(':')
+            interfase = int(interfase_str)
         ip = IP.from_str(temp_line[3])
         mask = IP.from_str(temp_line[4])
-        return IPIns(inst_time, host_name, ip, mask)
+        return IPIns(inst_time, host_name, interfase, ip, mask)
 
     elif inst_name == 'send_frame':
         host_name = temp_line[2]
