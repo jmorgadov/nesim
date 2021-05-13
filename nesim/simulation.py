@@ -198,8 +198,6 @@ class NetSimulation():
             self.update()
         for device in self.devices.values():
             device.save_log(self.output_path)
-        for host in self.hosts.values():
-            print(host.ip, host.ip_mask)
 
     def assign_mac_addres(self, host_name, mac):
         """

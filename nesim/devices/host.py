@@ -29,13 +29,14 @@ class Host(Device):
     def __init__(self, name: str, signal_time: int):
         self.signal_time = signal_time
         self.mac = None
-        self.ip: IP = None
-        self.ip_mask: IP = None
         self.send_receiver = self.create_send_receiver()
         ports = {f'{name}_1' : self.send_receiver}
 
+        self.ip: IP = None
+        self.ip_mask: IP = None
         self.ip_table: Dict[str: List[int]] = {}
         self.waiting_for_arpq: Dict[str: List[int]] = {}
+        self.received_payload = []
 
         # Data receiving stuff
         self.received_data = []
@@ -92,6 +93,12 @@ class Host(Device):
         with open(output_path, 'w+') as data_file:
             data = [' '.join(map(str, d)) + '\n' for d in self.received_data]
             data_file.writelines(data)
+
+        output_path = Path(path) / Path(f'{self.name}_payload.txt')
+        with open(output_path, 'w+') as data_file:
+            data = [' '.join(map(str, d)) + '\n' for d in self.received_payload]
+            data_file.writelines(data)
+
 
     def update(self, time):
         super().update(time)
@@ -220,6 +227,22 @@ class Host(Device):
                     for data in self.waiting_for_arpq[str(new_ip)]:
                         self.send_frame(mac_origin, data)
 
+        # Check IP-Package
+        elif data_s >= 11:
+            ip_dest = IP.from_bin(''.join(map(str, data[:32])))
+            ip_orig = IP.from_bin(''.join(map(str, data[32:64])))
+            # ttl = data[64:72]
+            # protocol = data[72:80]
+            payload_s = from_bit_data_to_number(data[80:88])
+
+            if ip_dest == self.ip:
+                data = from_bit_data_to_number(data[88:])
+                hex_data = str(hex(data))[2:].upper()
+                if len(hex_data) % 4 != 0:
+                    rest = 4 - len(hex_data) % 4
+                    hex_data = '0'*rest + hex_data
+                r_data = [self.sim_time, str(ip_orig), hex_data]
+                self.received_payload.append(r_data)
 
     def received_bit(self, bit: int):
         """
