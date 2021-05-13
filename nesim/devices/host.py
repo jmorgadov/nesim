@@ -133,7 +133,7 @@ class Host(Device):
         )
 
         rand = random()
-        if rand < 1e-2:
+        if rand < utils.CONFIG['error_prob']:
             ind = randint(0, len(data) - 1)
             data[ind] = (data[ind] + 1) % 2
 

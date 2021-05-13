@@ -38,9 +38,12 @@ def check_frame_correction(frame: List[int],
 def _get_simple_hash(data: List[List[int]]) -> Tuple[List[int], List[int]]:
     data_sum = sum(data)
     bit_data_sum = f'{data_sum:b}'
+    if len(bit_data_sum) % 8 != 0:
+        rest = 8 - len(bit_data_sum) % 8
+        bit_data_sum = '0'*rest + bit_data_sum
     error_correction = [int(b) for b in bit_data_sum]
     error_correction_size = [int(b) for b in f'{len(bit_data_sum) // 8:08b}']
-    return error_correction_size, extend_to_byte_divisor(error_correction, False)
+    return error_correction_size, error_correction
 
 
 def _get_hamming(data: List[List[int]]) -> Tuple[List[int], List[int]]:

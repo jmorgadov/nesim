@@ -3,6 +3,7 @@ from pathlib import Path
 CONFIG = {
     'signal_time' : 10,
     'error_detection' : 'simple_hash',
+    'error_prob' : 0.001,
 }
 
 _CONFIG_FILE_NAME = 'config.txt'
@@ -12,6 +13,8 @@ def _set_config_val(key: str, value):
         CONFIG[key] = int(value)
     if key == 'error_detection':
         CONFIG[key] = value
+    if key == 'error_prob':
+        CONFIG[key] = float(value)
 
 def check_config():
     path = Path(_CONFIG_FILE_NAME)
@@ -25,5 +28,6 @@ def check_config():
         with open(_CONFIG_FILE_NAME, 'w+') as file:
             file.writelines([
                 'signal_time 10\n',
-                'error_detection simple_hash',
+                'error_detection simple_hash\n',
+                'error_prob 0.001',
             ])
