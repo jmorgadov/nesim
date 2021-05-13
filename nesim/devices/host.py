@@ -226,6 +226,7 @@ class Host(Device):
                 if str(new_ip) in self.waiting_for_arpq:
                     for data in self.waiting_for_arpq[str(new_ip)]:
                         self.send_frame(mac_origin, data)
+                    self.waiting_for_arpq[str(new_ip)] = []
 
         # Check IP-Package
         elif data_s >= 11:
