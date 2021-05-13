@@ -133,7 +133,7 @@ class Host(Device):
         )
 
         rand = random()
-        if rand < 1e-10:
+        if rand < 1e-2:
             ind = randint(0, len(data) - 1)
             data[ind] = (data[ind] + 1) % 2
 
