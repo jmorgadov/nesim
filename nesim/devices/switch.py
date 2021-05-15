@@ -114,9 +114,6 @@ class Switch(Device):
             Nombre del puerto
         """
 
-        if self.name == 'S2' and self.ports['S2_1'].current_package:
-            print('asdasd')
-
         data = self.ports_buffer[port]
 
         if len(data) < 48:
