@@ -258,6 +258,10 @@ class NetSimulation():
             if isinstance(dev, Switch):
                 dev.update(self.time)
 
+        for dev in self.devices.values():
+            if isinstance(dev, Switch):
+                dev.receive()
+
         for host in self.hosts.values():
             host.receive()
 

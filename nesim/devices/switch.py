@@ -94,15 +94,16 @@ class Switch(Device):
     def update(self, time: int):
         for send_receiver in self.ports.values():
             send_receiver.update()
+        super().update(time)
 
+    def receive(self):
         for send_receiver in self.ports.values():
             if send_receiver.cable_head is not None:
                 send_receiver.receive()
 
         received = [self.get_port_value(p) for p in self.ports]
         sent = [self.get_port_value(p, False) for p in self.ports]
-        self.special_log(time, received, sent)
-        super().update(time)
+        self.special_log(self.sim_time, received, sent)
 
     def handle_buffer_data(self, port):
         """Se encarga de procesar los datos en el buffer de un puerto.
@@ -112,6 +113,9 @@ class Switch(Device):
         port : str
             Nombre del puerto
         """
+
+        if self.name == 'S2' and self.ports['S2_1'].current_package:
+            print('asdasd')
 
         data = self.ports_buffer[port]
 

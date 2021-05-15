@@ -4,7 +4,7 @@ from pathlib import Path
 from nesim.devices.send_receiver import SendReceiver
 from nesim.devices.device import Device
 from nesim.devices.cable import DuplexCableHead
-from nesim.devices.utils import from_bit_data_to_number, from_str_to_bin, data_size, from_str_to_bit_data
+from nesim.devices.utils import extend_to_byte_divisor, from_bit_data_to_number, from_str_to_bin, data_size, from_str_to_bit_data
 from nesim.devices.error_detection import check_frame_correction, get_error_detection_data
 from nesim.ip import IP
 import nesim.utils as utils
@@ -126,7 +126,7 @@ class Host(Device):
 
     def build_frame(self, mac: List[int], data: List[int]):
 
-        data += [0]*(len(data) % 8)
+        data = extend_to_byte_divisor(data)
 
         e_size, e_data = get_error_detection_data(
             data, utils.CONFIG['error_detection']
@@ -176,7 +176,8 @@ class Host(Device):
                   [0] * 8 + \
                   [0] * 8 + \
                   data_size(data) + \
-                  data
+                  extend_to_byte_divisor(data)
+        
         ip_dest_str = str(ip_dest)
         if ip_dest_str not in self.ip_table:
             if ip_dest_str not in self.waiting_for_arpq:
