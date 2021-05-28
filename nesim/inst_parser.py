@@ -1,3 +1,4 @@
+from nesim.devices.router import Route
 from nesim.ip import IP
 from typing import List
 from pathlib import Path
@@ -6,7 +7,7 @@ from nesim.instructions import (
     CreateHubIns,
     CreateSwitchIns,
     IPIns,
-    MacIns, SendIPPackage,
+    MacIns, PingIns, RouteIns, SendIPPackage,
     SendIns,
     SendFrameIns,
     ConnectIns,
@@ -43,11 +44,10 @@ def _parse_single_inst(inst_text: str):
         if device_type == 'hub':
             cant_ports = int(temp_line[4])
             return CreateHubIns(inst_time, device_name, cant_ports)
-        elif device_type == 'switch':
+        if device_type == 'switch':
             cant_ports = int(temp_line[4])
             return CreateSwitchIns(inst_time, device_name, cant_ports)
-        else:
-            return CreateHostIns(inst_time, device_name)
+        return CreateHostIns(inst_time, device_name)
 
     elif inst_name == 'connect':
         first_port = temp_line[2]
@@ -89,6 +89,25 @@ def _parse_single_inst(inst_text: str):
         ip = IP.from_str(temp_line[3])
         data = [int(i) for i in _to_binary(temp_line[4])]
         return SendIPPackage(inst_time, host_name, ip, data)
+
+    elif inst_name == 'ping':
+        host_name = temp_line[2]
+        ip = IP.from_str(temp_line[3])
+        return PingIns(inst_time, host_name, ip)
+
+    elif inst_name == 'route':
+        action = temp_line[2]
+        device_name = temp_line[3]
+
+        if action == 'reset':
+            return RouteIns(inst_time, device_name)
+
+        dest_ip = IP.from_str(temp_line[4])
+        mask = IP.from_str(temp_line[5])
+        gateway = IP.from_str(temp_line[6])
+        interface = int(temp_line[6])
+        return RouteIns(inst_time, device_name, action, dest_ip, mask,
+                        gateway, interface)
 
     else:
         port_name = temp_line[2]
