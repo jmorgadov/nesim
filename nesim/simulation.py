@@ -1,3 +1,4 @@
+from nesim.devices.router import Route
 from nesim.ip import IP
 from random import random, randint
 from typing import Dict, List
@@ -143,6 +144,16 @@ class NetSimulation():
             raise ValueError(f'Unknown host {host_name}')
 
         self.hosts[host_name].send_ip_package(ip_dest, data)
+
+    def ping_to(self, host_name: str, ip_dest: IP):
+        # if host_name not in self.hosts.keys():
+        #     raise ValueError(f'Unknown host {host_name}')
+        # self.hosts[host_name].send_ip_package(ip_dest, data)
+        raise NotImplementedError()
+
+    def route(self, device_name: str, action: str = 'reset',
+              route: Route = None):
+        raise NotImplementedError()
 
     def disconnect(self, port: str):
         """

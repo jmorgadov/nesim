@@ -1,8 +1,9 @@
 import abc
+from typing import List
 from nesim.ip import IP
 import nesim.simulation as sim
 import nesim.devices as dv
-from typing import List
+
 
 class Instruction(metaclass=abc.ABCMeta):
     """
@@ -100,6 +101,31 @@ class CreateSwitchIns(Instruction):
         switch = dv.Switch(self.switch_name, self.ports_count, 
                            net_sim.signal_time)
         net_sim.add_device(switch)
+
+class CreateRouterIns(Instruction):
+    """
+    Instrucción para crear un Router.
+
+    Parameters
+    ----------
+    time : int
+        Timepo en milisegundos en el que será ejecutada la instrucción en
+        la simulación.
+    router_name : str
+        Nombre del router.
+    ports_count : int
+        Cantidad de puertos del router.
+    """
+
+    def __init__(self, time: int, router_name: str, ports_count: int):
+        super().__init__(time)
+        self.router_name = router_name
+        self.ports_count = ports_count
+
+    def execute(self, net_sim: sim.NetSimulation):
+        router = dv.Router(self.router_name, self.ports_count, 
+                           net_sim.signal_time)
+        net_sim.add_device(router)
 
 
 class ConnectIns(Instruction):
@@ -209,3 +235,32 @@ class SendIPPackage(Instruction):
 
     def execute(self, net_sim: sim.NetSimulation):
         net_sim.send_ip_package(self.host_name, self.ip, self.data)
+
+
+class PingIns(Instruction):
+    def __init__(self, time: int, host_name: str, ip_dest: IP):
+        super().__init__(time)
+        self.host_name = host_name
+        self.ip = ip_dest
+
+    def execute(self, net_sim: sim.NetSimulation):
+        net_sim.ping_to(self.host_name, self.ip)
+
+
+class RouteIns(Instruction):
+    def __init__(self, time: int, device_name: str = None,
+                 action:str = 'reset', destination_ip: IP = None,
+                 mask: IP = None, gateway: IP = None, interface: int = None):
+        super().__init__(time)
+        self.action = action
+        self.device_name = device_name
+        self.route = None
+
+        if destination_ip is not None and \
+            mask is not None and \
+            gateway is not None and \
+            interface is not None:
+            self.route = dv.Route(destination_ip, mask, gateway, interface)
+
+    def execute(self, net_sim: sim.NetSimulation):
+        net_sim.route(self.host_name, self.action, self.route)
