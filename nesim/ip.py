@@ -1,3 +1,11 @@
+from __future__ import annotations
+from typing import List, Tuple
+from nesim.devices.utils import (
+    data_size,
+    extend_to_byte_divisor,
+    from_bit_data_to_number,
+    from_number_to_bit_data
+)
 
 
 class IP():
@@ -68,3 +76,98 @@ class IP():
 
     def __eq__(self, o: object) -> bool:
         return self.raw_value == o.raw_value
+
+    @staticmethod
+    def build_packet(dest_ip: IP, orig_ip: IP, data: List[int]) -> List[int]:
+        packet = dest_ip.bit_data + \
+                  orig_ip.bit_data + \
+                  [0] * 8 + \
+                  [0] * 8 + \
+                  data_size(data) + \
+                  extend_to_byte_divisor(data)
+
+        return packet
+
+class IPPacket():
+    """Representa un paquete IP
+
+    Parameters
+    ----------
+    dest_ip : IP
+        Ip destino.
+    orig_ip : IP
+        Ip origen.
+    data : List[int]
+        Datos a enviar.
+    ttl : int, optional
+        Time to live, by default 0
+    protocol : int, optional
+        Protocolo, by default 0
+
+    Attributes
+    ----------
+    dest_ip : IP
+        Ip destino.
+    orig_ip : IP
+        Ip origen.
+    data : List[int]
+        Datos a enviar.
+    ttl : int
+        Time to live
+    protocol : int
+        Protocolo
+    bit_data : List[int]
+        Paquete en forma de bits.
+    """
+
+    def __init__(self, dest_ip: IP, orig_ip: IP, data: List[int],
+                 ttl: int = 0, protocol: int = 0) -> None:
+
+        self.to_ip = dest_ip
+        self.from_ip = orig_ip
+        self.data = data
+
+        self.ttl = from_number_to_bit_data(ttl)
+        self.protocol = from_number_to_bit_data(protocol)
+
+        self.bit_data = dest_ip.bit_data + \
+                  orig_ip.bit_data + \
+                  self.ttl + \
+                  self.protocol + \
+                  data_size(data) + \
+                  extend_to_byte_divisor(data)
+
+    @staticmethod
+    def parse(data: List[int]) -> Tuple[bool, IPPacket]:
+        """Convierte una serie de bits a un packete ip si es posible.
+
+        Parameters
+        ----------
+        data : List[int]
+            Datos en forma de bits.
+
+        Returns
+        -------
+        bool
+            True si los datos enforma de bits son válidos.
+        IPPacket
+            Packete creado.
+        """
+
+        if len(data) < 88:
+            return False, None
+
+        ip_dest = IP.from_bin(''.join(map(str, data[:32])))
+        ip_orig = IP.from_bin(''.join(map(str, data[32:64])))
+        ttl = from_bit_data_to_number(data[64:72])
+        protocol = from_bit_data_to_number(data[72:80])
+        payload_s = from_bit_data_to_number(data[80:88])
+
+        total_size = 88 + payload_s * 8
+
+        if len(data) < total_size:
+            return False, None
+
+        bit_data = data[88: 88 + payload_s * 8]
+        packet = IPPacket(ip_dest, ip_orig, bit_data, ttl, protocol)
+        return True, packet

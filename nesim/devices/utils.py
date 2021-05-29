@@ -1,6 +1,14 @@
 from math import ceil
 from typing import List
 
+def from_number_to_bit_data(number: int, size: int = 8):
+    data = [int(b) for b in f'{number:b}']
+    if len(data) > size:
+        return data[-size:]
+    elif len(data) < size:
+        data = [0] * (size - len(data)) + data
+    return data
+
 def from_bit_data_to_number(data: List[int]):
     """Convierte los datos de una lista de bits a un número en base decimal.
 
@@ -22,6 +30,14 @@ def from_str_to_bin(s: str):
 
 def from_str_to_bit_data(s: str):
     return [int(b) for b in from_str_to_bin(s)]
+
+def from_bit_data_to_hex(data: List[int]):
+    number = from_bit_data_to_number(data)
+    hex_data = str(hex(number))[2:].upper()
+    if len(hex_data) % 4 != 0:
+        rest = 4 - len(hex_data) % 4
+        hex_data = '0'*rest + hex_data
+    return hex_data
 
 def data_size(data):
     size_str = f'{ceil(len(data)/8):b}'

@@ -1,12 +1,13 @@
+from nesim.frame import Frame
 from random import randint, random
 from typing import Dict, List, Tuple
 from pathlib import Path
 from nesim.devices.send_receiver import SendReceiver
 from nesim.devices.device import Device
 from nesim.devices.cable import DuplexCableHead
-from nesim.devices.utils import extend_to_byte_divisor, from_bit_data_to_number, from_str_to_bin, data_size, from_str_to_bit_data
+from nesim.devices.utils import extend_to_byte_divisor, from_bit_data_to_hex, from_bit_data_to_number, from_str_to_bin, data_size, from_str_to_bit_data
 from nesim.devices.error_detection import check_frame_correction, get_error_detection_data
-from nesim.ip import IP
+from nesim.ip import IP, IPPacket
 import nesim.utils as utils
 
 class Host(Device):
@@ -124,29 +125,6 @@ class Host(Device):
 
         self.send_receiver.send(packages)
 
-    def build_frame(self, mac: List[int], data: List[int]):
-
-        data = extend_to_byte_divisor(data)
-
-        e_size, e_data = get_error_detection_data(
-            data, utils.CONFIG['error_detection']
-        )
-
-        rand = random()
-        if rand < utils.CONFIG['error_prob']:
-            ind = randint(0, len(data) - 1)
-            data[ind] = (data[ind] + 1) % 2
-
-        size = data_size(data)
-        final_data = mac + \
-                     self.mac + \
-                     size + \
-                     e_size + \
-                     data + \
-                     e_data
-
-        return final_data
-
     def send_frame(self, mac: List[int], data: List[int]):
         """
         Ordena a un host a enviar un frame determinado a una dirección mac
@@ -161,8 +139,8 @@ class Host(Device):
         data : List[int]
             Frame a enviar.
         """
-
-        self.send(self.build_frame(mac, data))
+        frame_bit_data = Frame.build(mac, self.mac, data).bit_data
+        self.send(frame_bit_data)
 
     def find_mac(self, ip: IP):
         arpq = from_str_to_bit_data('ARPQ')
@@ -171,13 +149,7 @@ class Host(Device):
 
 
     def send_ip_package(self, ip_dest: IP, data: List[int]):
-        package = ip_dest.bit_data + \
-                  self.ip.bit_data + \
-                  [0] * 8 + \
-                  [0] * 8 + \
-                  data_size(data) + \
-                  extend_to_byte_divisor(data)
-        
+        package = IP.build_packet(ip_dest, self.ip, data)
         ip_dest_str = str(ip_dest)
         if ip_dest_str not in self.ip_table:
             if ip_dest_str not in self.waiting_for_arpq:
@@ -229,22 +201,12 @@ class Host(Device):
                         self.send_frame(mac_origin, data)
                     self.waiting_for_arpq[str(new_ip)] = []
 
-        # Check IP-Package
-        elif data_s >= 11:
-            ip_dest = IP.from_bin(''.join(map(str, data[:32])))
-            ip_orig = IP.from_bin(''.join(map(str, data[32:64])))
-            # ttl = data[64:72]
-            # protocol = data[72:80]
-            payload_s = from_bit_data_to_number(data[80:88])
-
-            if ip_dest == self.ip:
-                data = from_bit_data_to_number(data[88:])
-                hex_data = str(hex(data))[2:].upper()
-                if len(hex_data) % 4 != 0:
-                    rest = 4 - len(hex_data) % 4
-                    hex_data = '0'*rest + hex_data
-                r_data = [self.sim_time, str(ip_orig), hex_data]
-                self.received_payload.append(r_data)
+        # Check IP-Packet
+        valid_ip_packet, ip_packet = IPPacket.parse(data)
+        if valid_ip_packet and ip_packet.to_ip == self.ip:
+            hex_data = from_bit_data_to_hex(ip_packet.data)
+            r_data = [self.sim_time, str(ip_packet.from_ip), hex_data]
+            self.received_payload.append(r_data)
 
     def received_bit(self, bit: int):
         """
