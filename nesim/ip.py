@@ -1,4 +1,5 @@
 from __future__ import annotations
+from io import UnsupportedOperation
 from typing import List, Tuple
 from nesim.devices.utils import (
     data_size,
@@ -6,6 +7,14 @@ from nesim.devices.utils import (
     from_bit_data_to_number,
     from_number_to_bit_data
 )
+
+
+PAYLOAD_TABLE = {
+    0 : 'echo reply',
+    3 : 'destination host unreachable',
+    8 : 'echo request',
+    11 : 'time exceeded'
+}
 
 
 class IP():
@@ -97,7 +106,7 @@ class IPPacket():
         Ip destino.
     orig_ip : IP
         Ip origen.
-    data : List[int]
+    payload : List[int]
         Datos a enviar.
     ttl : int, optional
         Time to live, by default 0
@@ -110,22 +119,24 @@ class IPPacket():
         Ip destino.
     orig_ip : IP
         Ip origen.
-    data : List[int]
+    payload : List[int]
         Datos a enviar.
     ttl : int
         Time to live
     protocol : int
         Protocolo
+    protocol_nmae : str
+        Nombre del protocolo.
     bit_data : List[int]
         Paquete en forma de bits.
     """
 
-    def __init__(self, dest_ip: IP, orig_ip: IP, data: List[int],
+    def __init__(self, dest_ip: IP, orig_ip: IP, payload: List[int],
                  ttl: int = 0, protocol: int = 0) -> None:
 
         self.to_ip = dest_ip
         self.from_ip = orig_ip
-        self.data = data
+        self.payload = payload
 
         self.ttl = from_number_to_bit_data(ttl)
         self.protocol = from_number_to_bit_data(protocol)
@@ -134,8 +145,20 @@ class IPPacket():
                   orig_ip.bit_data + \
                   self.ttl + \
                   self.protocol + \
-                  data_size(data) + \
-                  extend_to_byte_divisor(data)
+                  data_size(payload) + \
+                  extend_to_byte_divisor(payload)
+
+    @property
+    def icmp_payload_msg(self) -> str:
+        if self.protocol != 1:
+            raise UnsupportedOperation('IP packet\'s protocol is not ICMP')
+        payload_number = from_bit_data_to_number(self.payload)
+        return PAYLOAD_TABLE.get(payload_number, 'Unknown payload number')
+
+    @staticmethod
+    def ping(dest_ip: IP, orig_ip: IP) -> IPPacket:
+        payload = from_number_to_bit_data(8)
+        return IPPacket(dest_ip, orig_ip, payload, ttl=0, protocol=1)
 
     @staticmethod
     def parse(data: List[int]) -> Tuple[bool, IPPacket]:

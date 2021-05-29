@@ -7,7 +7,7 @@ from nesim.devices.device import Device
 from nesim.devices.cable import DuplexCableHead
 from nesim.devices.utils import extend_to_byte_divisor, from_bit_data_to_hex, from_bit_data_to_number, from_str_to_bin, data_size, from_str_to_bit_data
 from nesim.devices.error_detection import check_frame_correction, get_error_detection_data
-from nesim.ip import IP, IPPacket
+from nesim.ip import IP, IPPacket, PAYLOAD_TABLE
 import nesim.utils as utils
 
 class Host(Device):
@@ -204,8 +204,13 @@ class Host(Device):
         # Check IP-Packet
         valid_ip_packet, ip_packet = IPPacket.parse(data)
         if valid_ip_packet and ip_packet.to_ip == self.ip:
-            hex_data = from_bit_data_to_hex(ip_packet.data)
-            r_data = [self.sim_time, str(ip_packet.from_ip), hex_data]
+            r_data = [self.sim_time, str(ip_packet.from_ip)]
+            # Is ICMP protocol
+            if ip_packet.protocol == 1:
+                r_data.append(ip_packet.icmp_payload_msg)
+            else:
+                hex_data = from_bit_data_to_hex(ip_packet.payload)
+                r_data.append(hex_data)
             self.received_payload.append(r_data)
 
     def received_bit(self, bit: int):
