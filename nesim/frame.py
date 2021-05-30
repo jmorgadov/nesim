@@ -43,8 +43,8 @@ class Frame():
                     self.additional_info = '(ARPQ) response'
 
     def __str__(self) -> str:
-        from_mac = from_bit_data_to_hex(from_number_to_bit_data(self.from_mac))
-        to_mac = from_bit_data_to_hex(from_number_to_bit_data(self.to_mac))
+        from_mac = from_bit_data_to_hex(from_number_to_bit_data(self.from_mac, 16))
+        to_mac = from_bit_data_to_hex(from_number_to_bit_data(self.to_mac, 16))
 
         data = from_bit_data_to_hex(self.data)
         valid, packet = IPPacket.parse(self.data)

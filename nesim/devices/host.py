@@ -69,7 +69,7 @@ class Host(Router):
             super().on_frame_received(frame, 1)
         self.received_data.append(r_data)
 
-    def on_ip_packet_received(self, packet: IPPacket) -> None:
+    def on_ip_packet_received(self, packet: IPPacket, port: int = 1) -> None:
         if packet.to_ip != self.ip:
             return
 

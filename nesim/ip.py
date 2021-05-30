@@ -174,6 +174,11 @@ class IPPacket():
         return IPPacket(dest_ip, orig_ip, payload, ttl=0, protocol=1)
 
     @staticmethod
+    def no_dest_host(dest_ip: IP, orig_ip: IP) -> IPPacket:
+        payload = from_number_to_bit_data(3)
+        return IPPacket(dest_ip, orig_ip, payload, ttl=0, protocol=1)
+
+    @staticmethod
     def parse(data: List[int]) -> Tuple[bool, IPPacket]:
         """Convierte una serie de bits a un packete ip si es posible.
 

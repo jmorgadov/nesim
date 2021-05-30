@@ -96,15 +96,20 @@ class Router(IPPacketSender, RouteTable):
         self.routes = []
         super().__init__(name, ports_count, signal_time)
 
-    def enroute(self, packet: IPPacket):
+    def enroute(self, packet: IPPacket, port: int = 1):
         route = self.get_enrouting(packet.to_ip)
+
+        if route is None:
+            super().send_ip_packet(IPPacket.no_dest_host(packet.from_ip, self.ips[port]))
+            return
+
         to_ip = route.gateway
         if route.gateway.raw_value == 0:
             to_ip = packet.to_ip
         super().send_ip_packet(packet, route.interface, to_ip)
 
-    def on_ip_packet_received(self, packet: IPPacket) -> None:
-        self.enroute(packet)
+    def on_ip_packet_received(self, packet: IPPacket, port: int = 1) -> None:
+        self.enroute(packet, port)
 
     def on_frame_received(self, frame: Frame, port: int) -> None:
         print(f'[{self.sim_time:>6}] {self.name:>18}  received:', frame)
@@ -135,4 +140,4 @@ class Router(IPPacketSender, RouteTable):
 
         valid_packet, packet = IPPacket.parse(frame.data)
         if valid_packet:
-            self.on_ip_packet_received(packet)
+            self.on_ip_packet_received(packet, port)
