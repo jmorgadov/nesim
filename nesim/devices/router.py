@@ -1,7 +1,8 @@
+from nesim.devices.utils import from_bit_data_to_number, from_number_to_bit_data, from_str_to_bin
 from typing import List, Union
 from nesim.devices.multiple_port_device import MultiplePortDevice
 from nesim.frame import Frame
-from nesim.ip import IP
+from nesim.ip import IP, IPPacket
 
 
 class Route():
@@ -90,4 +91,37 @@ class Router(MultiplePortDevice, RouteTable):
     """Representa un router en la simulación."""
 
     def on_frame_received(self, frame: Frame, port: str) -> None:
-        raise NotImplementedError()
+        mac_dest = from_number_to_bit_data(frame.to_mac)
+        mac_dest_str = ''.join(map(str, mac_dest))
+        mac_origin = from_number_to_bit_data(frame.from_mac)
+        data_s = frame.frame_data_size
+        data = frame.data
+
+        # ARPQ protocol
+        if data_s == 8:
+            arpq = from_str_to_bin('ARPQ')
+            ip = ''.join(map(str, data[32:]))
+            if mac_dest_str == '1'*16:
+                arpq_data = ''.join(map(str, data[:32]))
+                if arpq_data.endswith(arpq) and \
+                    ip == self.ip.str_binary:
+                    self.send_frame(mac_origin, data)
+            else:
+                new_ip = IP.from_bin(ip)
+                self.ip_table[str(new_ip)] = mac_origin
+                if str(new_ip) in self.waiting_for_arpq:
+                    for data in self.waiting_for_arpq[str(new_ip)]:
+                        self.send_frame(mac_origin, data)
+                    self.waiting_for_arpq[str(new_ip)] = []
+            return
+
+        valid_packet, packet = IPPacket.parse(frame.data)
+        if valid_packet:
+            route = self.get_enrouting(packet.to_ip)
+            str_gateway = str(route.gateway)
+            if str_gateway in self.ip_table:
+                gateway_mask = self.ip_table[str_gateway]
+                self.send_frame(gateway_mask, packet.bit_data, route.interface)
+            else:
+                self.waiting_for_arpq[str_gateway] = packet.bit_data
+                self.find_mac(route.gateway, route.interface)

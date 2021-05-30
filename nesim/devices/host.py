@@ -1,16 +1,23 @@
-from nesim.frame import Frame
-from random import randint, random
+from nesim.devices.ip_packet_sender import IPPacketSender
 from typing import Dict, List, Tuple
 from pathlib import Path
+from nesim.devices.frame_sender import FrameSender
+from nesim.devices.router import RouteTable
+from nesim.frame import Frame
 from nesim.devices.send_receiver import SendReceiver
 from nesim.devices.device import Device
 from nesim.devices.cable import DuplexCableHead
-from nesim.devices.utils import extend_to_byte_divisor, from_bit_data_to_hex, from_bit_data_to_number, from_str_to_bin, data_size, from_str_to_bit_data
-from nesim.devices.error_detection import check_frame_correction, get_error_detection_data
-from nesim.ip import IP, IPPacket, PAYLOAD_TABLE
+from nesim.devices.utils import (
+    from_bit_data_to_hex,
+    from_bit_data_to_number,
+    from_str_to_bin, data_size,
+    from_str_to_bit_data
+)
+from nesim.devices.error_detection import check_frame_correction
+from nesim.ip import IP, IPPacket
 import nesim.utils as utils
 
-class Host(Device):
+class Host(IPPacketSender, RouteTable):
     """
     Representa una PC (Host).
 
@@ -29,14 +36,9 @@ class Host(Device):
 
     def __init__(self, name: str, signal_time: int):
         self.signal_time = signal_time
-        self.mac = None
         self.send_receiver = self.create_send_receiver()
         ports = {f'{name}_1' : self.send_receiver}
 
-        self.ip: IP = None
-        self.ip_mask: IP = None
-        self.ip_table: Dict[str: List[int]] = {}
-        self.waiting_for_arpq: Dict[str: List[int]] = {}
         self.received_payload = []
 
         # Data receiving stuff
@@ -100,68 +102,12 @@ class Host(Device):
             data = [' '.join(map(str, d)) + '\n' for d in self.received_payload]
             data_file.writelines(data)
 
-
     def update(self, time):
         super().update(time)
         self.send_receiver.update()
 
-    def send(self, data: List[int], package_size = None):
-        """
-        Agrega nuevos datos para ser enviados a la lista de datos.
-
-        Parameters
-        ----------
-        data : List[List[int]]
-            Datos a ser enviados.
-        """
-
-        if package_size is None:
-            package_size = len(data)
-
-        packages = []
-        while data:
-            packages.append(data[:package_size])
-            data = data[package_size:]
-
-        self.send_receiver.send(packages)
-
-    def send_frame(self, mac: List[int], data: List[int]):
-        """
-        Ordena a un host a enviar un frame determinado a una dirección mac
-        determinada.
-
-        Parameters
-        ----------
-        host_name : str
-            Nombre del host que envía la información.
-        mac : List[int]
-            Mac destino.
-        data : List[int]
-            Frame a enviar.
-        """
-        frame_bit_data = Frame.build(mac, self.mac, data).bit_data
-        self.send(frame_bit_data)
-
     def send_ping_to(self, to_ip: IP) -> None:
         self.send_ip_packet(IPPacket.ping(to_ip, self.ip))
-
-    def find_mac(self, ip: IP):
-        arpq = from_str_to_bit_data('ARPQ')
-        ip_data = ip.bit_data
-        self.send_frame([1]*16, arpq + ip_data)
-
-    def send_ip_packet(self, packet: IPPacket) -> None:
-        ip_dest_str = str(packet.to_ip)
-        if ip_dest_str not in self.ip_table:
-            if ip_dest_str not in self.waiting_for_arpq:
-                self.waiting_for_arpq[ip_dest_str] = []
-            self.waiting_for_arpq[ip_dest_str].append(packet.bit_data)
-            self.find_mac(packet.to_ip)
-        else:
-            self.send_frame(self.ip_table[ip_dest_str], packet.bit_data)
-
-    def send_by_ip(self, ip_dest: IP, data: List[int]) -> None:
-        self.send_ip_packet(IPPacket(ip_dest, self.ip, data))
 
     def receive(self):
         """

@@ -142,12 +142,14 @@ class IPPacket():
         self.protocol = from_number_to_bit_data(protocol)
         self.protocol_number = protocol
 
-        self.bit_data = dest_ip.bit_data + \
-                  orig_ip.bit_data + \
-                  self.ttl + \
-                  self.protocol + \
-                  data_size(payload) + \
-                  extend_to_byte_divisor(payload)
+    @property
+    def bit_data(self):
+        return self.to_ip.bit_data + \
+               self.from_ip.bit_data + \
+               self.ttl + \
+               self.protocol + \
+               data_size(self.payload) + \
+               extend_to_byte_divisor(self.payload)
 
     @property
     def icmp_payload_msg(self) -> str:

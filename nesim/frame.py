@@ -30,10 +30,8 @@ class Frame():
         self.bit_data = bit_data
         self.is_valid = True
 
-
     @staticmethod
     def build(dest_mac: List[int], orig_mac: List[int], data: List[int]) -> Frame:
-
         data = extend_to_byte_divisor(data)
 
         e_size, e_data = get_error_detection_data(
