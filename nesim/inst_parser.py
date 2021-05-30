@@ -110,7 +110,7 @@ def _parse_single_inst(inst_text: str):
         dest_ip = IP.from_str(temp_line[4])
         mask = IP.from_str(temp_line[5])
         gateway = IP.from_str(temp_line[6])
-        interface = int(temp_line[6])
+        interface = int(temp_line[7])
         return RouteIns(inst_time, device_name, action, dest_ip, mask,
                         gateway, interface)
 

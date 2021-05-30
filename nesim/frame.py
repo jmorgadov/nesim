@@ -1,10 +1,10 @@
 from __future__ import annotations
 from typing import List
 from random import randint, random
-from nesim.ip import IP
+from nesim.ip import IP, IPPacket
 from nesim import utils
 from nesim.devices.error_detection import get_error_detection_data
-from nesim.devices.utils import data_size, extend_to_byte_divisor, from_bit_data_to_number, from_str_to_bin
+from nesim.devices.utils import data_size, extend_to_byte_divisor, from_bit_data_to_hex, from_bit_data_to_number, from_number_to_bit_data, from_str_to_bin
 
 
 class Frame():
@@ -29,6 +29,29 @@ class Frame():
         self.error_data = bit_data[top_data_pos: top_data_pos + 8 * self.error_size]
         self.bit_data = bit_data
         self.is_valid = True
+        self.additional_info = ''
+
+        if self.frame_data_size / 8 == 8:
+            arpq = from_str_to_bin('ARPQ')
+            ip = ''.join(map(str, self.data[32:64]))
+            mac_dest_str = ''.join(map(str, bit_data[:16]))
+            arpq_data = ''.join(map(str, self.data[:32]))
+            if arpq_data.endswith(arpq):
+                if mac_dest_str == '1'*16:
+                    self.additional_info = f'(ARPQ) Who is {IP.from_bin(ip)} ?'
+                else:
+                    self.additional_info = '(ARPQ) response'
+
+    def __str__(self) -> str:
+        from_mac = from_bit_data_to_hex(from_number_to_bit_data(self.from_mac))
+        to_mac = from_bit_data_to_hex(from_number_to_bit_data(self.to_mac))
+
+        data = from_bit_data_to_hex(self.data)
+        valid, packet = IPPacket.parse(self.data)
+        if valid:
+            data = str(packet)
+
+        return f'{from_mac} -> {to_mac} | {data} | {self.additional_info}'
 
     @staticmethod
     def build(dest_mac: List[int], orig_mac: List[int], data: List[int]) -> Frame:

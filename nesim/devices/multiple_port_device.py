@@ -1,5 +1,4 @@
 import abc
-from nesim.devices.ip_packet_sender import IPPacketSender
 from nesim.frame import Frame
 from typing import Dict, List
 from pathlib import Path
@@ -8,7 +7,7 @@ from nesim.devices.cable import DuplexCableHead
 from nesim.devices.device import Device
 
 
-class MultiplePortDevice(IPPacketSender, metaclass=abc.ABCMeta):
+class MultiplePortDevice(Device, metaclass=abc.ABCMeta):
     """Representa un dispositivo que contiene múltiples puertos.
 
     Parameters

@@ -3,7 +3,7 @@ from io import UnsupportedOperation
 from typing import List, Tuple
 from nesim.devices.utils import (
     data_size,
-    extend_to_byte_divisor,
+    extend_to_byte_divisor, from_bit_data_to_hex,
     from_bit_data_to_number,
     from_number_to_bit_data
 )
@@ -141,6 +141,11 @@ class IPPacket():
         self.ttl = from_number_to_bit_data(ttl)
         self.protocol = from_number_to_bit_data(protocol)
         self.protocol_number = protocol
+
+    def __str__(self) -> str:
+        payload_hex = from_bit_data_to_hex(self.payload)
+        data = f'{self.from_ip} -> {self.to_ip} ({payload_hex})'
+        return data
 
     @property
     def bit_data(self):

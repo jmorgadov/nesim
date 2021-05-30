@@ -1,4 +1,5 @@
-from nesim.devices.router import Route
+from nesim.devices.multiple_port_device import MultiplePortDevice
+from nesim.devices.router import Route, Router
 from nesim.ip import IP, IPPacket
 from random import random, randint
 from typing import Dict, List
@@ -153,7 +154,13 @@ class NetSimulation():
 
     def route(self, device_name: str, action: str = 'reset',
               route: Route = None):
-        raise NotImplementedError()
+        router: Router = self.devices[device_name]
+        if action == 'add':
+            router.add_route(route)
+        elif action == 'remove':
+            router.remove_route(route)
+        else:
+            router.reset_routes()
 
     def disconnect(self, port: str):
         """
@@ -256,6 +263,14 @@ class NetSimulation():
 
         for device in self.devices.values():
             device.reset()
+
+        # for dev in self.devices.values():
+        #     if isinstance(dev, MultiplePortDevice):
+        #         dev.update(self.time)
+
+        # for dev in self.devices.values():
+        #     if isinstance(dev, MultiplePortDevice):
+        #         dev.receive()
 
         for host in self.hosts.values():
             host.update(self.time)

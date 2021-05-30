@@ -1,3 +1,4 @@
+from nesim.devices.ip_packet_sender import IPPacketSender
 from nesim.devices.utils import from_bit_data_to_number, from_number_to_bit_data, from_str_to_bin
 from typing import List, Union
 from nesim.devices.multiple_port_device import MultiplePortDevice
@@ -16,7 +17,7 @@ class Route():
 
     def enroute(self, ip: IP) -> bool:
         masked_ip = ip.raw_value & self.mask.raw_value
-        if masked_ip == self.destination_ip:
+        if masked_ip == self.destination_ip.raw_value:
             return True
         return False
 
@@ -35,7 +36,7 @@ class RouteTable():
 
     routes: List[Route] = []
 
-    def reset(self) -> None:
+    def reset_routes(self) -> None:
         """Limpia la tabla de rutas."""
 
         self.routes.clear()
@@ -51,7 +52,7 @@ class RouteTable():
         """
 
         self.routes.append(route)
-        self.routes.sort(lambda x: x.mask.raw_value, reverse=True)
+        self.routes.sort(key=lambda x: x.mask.raw_value, reverse=True)
 
     def remove_route(self, route: Route) -> None:
         """
@@ -87,25 +88,36 @@ class RouteTable():
         return None
 
 
-class Router(MultiplePortDevice, RouteTable):
+class Router(IPPacketSender, RouteTable):
     """Representa un router en la simulación."""
 
+    def enroute(self, packet: IPPacket):
+        route = self.get_enrouting(packet.to_ip)
+        to_ip = route.gateway
+        if route.gateway.raw_value == 0:
+            to_ip = packet.to_ip
+        super().send_ip_packet(packet, route.interface, to_ip)
+
+    def on_ip_packet_received(self, packet: IPPacket) -> None:
+        self.enroute(packet)
+
     def on_frame_received(self, frame: Frame, port: str) -> None:
-        mac_dest = from_number_to_bit_data(frame.to_mac)
+        print(f'[{self.sim_time}] {self.name} received:', frame)
+        mac_dest = from_number_to_bit_data(frame.to_mac, 16)
         mac_dest_str = ''.join(map(str, mac_dest))
-        mac_origin = from_number_to_bit_data(frame.from_mac)
+        mac_origin = from_number_to_bit_data(frame.from_mac, 16)
         data_s = frame.frame_data_size
         data = frame.data
 
         # ARPQ protocol
-        if data_s == 8:
+        if data_s / 8 == 8:
             arpq = from_str_to_bin('ARPQ')
-            ip = ''.join(map(str, data[32:]))
+            ip = ''.join(map(str, data[32:64]))
             if mac_dest_str == '1'*16:
                 arpq_data = ''.join(map(str, data[:32]))
                 if arpq_data.endswith(arpq) and \
                     ip == self.ip.str_binary:
-                    self.send_frame(mac_origin, data)
+                    self.respond_arpq(mac_origin, port)
             else:
                 new_ip = IP.from_bin(ip)
                 self.ip_table[str(new_ip)] = mac_origin
@@ -117,11 +129,4 @@ class Router(MultiplePortDevice, RouteTable):
 
         valid_packet, packet = IPPacket.parse(frame.data)
         if valid_packet:
-            route = self.get_enrouting(packet.to_ip)
-            str_gateway = str(route.gateway)
-            if str_gateway in self.ip_table:
-                gateway_mask = self.ip_table[str_gateway]
-                self.send_frame(gateway_mask, packet.bit_data, route.interface)
-            else:
-                self.waiting_for_arpq[str_gateway] = packet.bit_data
-                self.find_mac(route.gateway, route.interface)
+            self.on_ip_packet_received(packet)

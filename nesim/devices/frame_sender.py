@@ -1,10 +1,10 @@
 import abc
+from nesim.devices.multiple_port_device import MultiplePortDevice
 from typing import List
 from nesim.frame import Frame
-from nesim.devices import Device
 
 
-class FrameSender(Device, metaclass=abc.ABCMeta):
+class FrameSender(MultiplePortDevice, metaclass=abc.ABCMeta):
 
     mac: List[int] = []
 
