@@ -134,7 +134,7 @@ class MultiplePortDevice(Device, metaclass=abc.ABCMeta):
         if not frame.is_valid:
             return
 
-        self.on_frame_received(frame, port)
+        self.on_frame_received(frame, port + 1)
         self.ports_buffer[port] = []
 
 

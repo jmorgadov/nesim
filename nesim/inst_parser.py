@@ -4,7 +4,7 @@ from typing import List
 from pathlib import Path
 from nesim.instructions import (
     CreateHostIns,
-    CreateHubIns,
+    CreateHubIns, CreateRouterIns,
     CreateSwitchIns,
     IPIns, Instruction,
     MacIns, PingIns, RouteIns, SendIPPackage,
@@ -47,6 +47,9 @@ def _parse_single_inst(inst_text: str):
         if device_type == 'switch':
             cant_ports = int(temp_line[4])
             return CreateSwitchIns(inst_time, device_name, cant_ports)
+        if device_type == 'router':
+            cant_ports = int(temp_line[4])
+            return CreateRouterIns(inst_time, device_name, cant_ports)
         return CreateHostIns(inst_time, device_name)
 
     elif inst_name == 'connect':
@@ -134,6 +137,8 @@ def parse_instructions(instr_lines: List[str]):
     """
     instructions = []
     for line in instr_lines:
+        if line == '\n' or line.startswith('#') or line.startswith(' '):
+            continue
         inst = _parse_single_inst(line)
         if isinstance(inst, Instruction):
             instructions.append(inst)

@@ -1,6 +1,6 @@
 import abc
 from nesim.frame import Frame
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from nesim.devices.utils import from_number_to_bit_data, from_str_to_bin, from_str_to_bit_data
 from nesim.ip import IP, IPPacket
 from nesim.devices.frame_sender import FrameSender
@@ -8,10 +8,12 @@ from nesim.devices.frame_sender import FrameSender
 
 class IPPacketSender(FrameSender, metaclass=abc.ABCMeta):
 
-    ip: IP = None
-    ip_mask: IP = None
-    ip_table: Dict[str, List[int]] = {}
-    waiting_for_arpq: Dict[str, List[int]] = {}
+    def __init__(self, name: str, ports_count: int, signal_time: int):        
+        self.ips: Dict[int, IP] = {}
+        self.masks: Dict[int, IP] = {}
+        self.ip_table: Dict[str, List[int]] = {}
+        self.waiting_for_arpq: Dict[str, List[List[int]]] = {}
+        super().__init__(name, ports_count, signal_time)
 
     def make_arpq(self, ip: IP, port: int = 1):
         """
@@ -30,7 +32,7 @@ class IPPacketSender(FrameSender, metaclass=abc.ABCMeta):
 
     def respond_arpq(self, dest_mac: List[int], port: int = 1) -> None:
         arpq = from_str_to_bit_data('ARPQ')
-        ip_data = self.ip.bit_data
+        ip_data = self.ips[port].bit_data
         self.send_frame(dest_mac, arpq + ip_data, port)
 
 
@@ -52,7 +54,7 @@ class IPPacketSender(FrameSender, metaclass=abc.ABCMeta):
             if ip_dest_str not in self.waiting_for_arpq:
                 self.waiting_for_arpq[ip_dest_str] = []
             self.waiting_for_arpq[ip_dest_str].append(packet.bit_data)
-            self.make_arpq(packet.to_ip, port)
+            self.make_arpq(ip_dest, port)
         else:
             self.send_frame(self.ip_table[ip_dest_str], packet.bit_data, port)
 
@@ -68,4 +70,4 @@ class IPPacketSender(FrameSender, metaclass=abc.ABCMeta):
             Datos a enviar.
         """
 
-        self.send_ip_packet(IPPacket(ip_dest, self.ip, data), port)
+        self.send_ip_packet(IPPacket(ip_dest, self.ips[port], data), port)

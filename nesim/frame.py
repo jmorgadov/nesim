@@ -53,6 +53,9 @@ class Frame():
 
         return f'{from_mac} -> {to_mac} | {data} | {self.additional_info}'
 
+    def __repr__(self) -> str:
+        return str(self)
+
     @staticmethod
     def build(dest_mac: List[int], orig_mac: List[int], data: List[int]) -> Frame:
         data = extend_to_byte_divisor(data)

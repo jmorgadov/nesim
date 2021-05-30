@@ -52,6 +52,7 @@ class CreateHubIns(Instruction):
         self.ports_count = ports_count
 
     def execute(self, net_sim: sim.NetSimulation):
+        print(f'Creating hub: {self.hub_name}')
         hub = dv.Hub(self.hub_name, self.ports_count)
         net_sim.add_device(hub)
 
@@ -74,6 +75,7 @@ class CreateHostIns(Instruction):
         self.host_name = host_name
 
     def execute(self, net_sim: sim.NetSimulation):
+        print(f'Creating host: {self.host_name}')
         host = dv.Host(self.host_name, net_sim.signal_time)
         net_sim.add_device(host)
 
@@ -98,6 +100,7 @@ class CreateSwitchIns(Instruction):
         self.ports_count = ports_count
 
     def execute(self, net_sim: sim.NetSimulation):
+        print(f'Creating switch: {self.switch_name}')
         switch = dv.Switch(self.switch_name, self.ports_count, 
                            net_sim.signal_time)
         net_sim.add_device(switch)
@@ -123,7 +126,8 @@ class CreateRouterIns(Instruction):
         self.ports_count = ports_count
 
     def execute(self, net_sim: sim.NetSimulation):
-        router = dv.Router(self.router_name, self.ports_count, 
+        print(f'Creating router: {self.router_name}')
+        router = dv.Router(self.router_name, self.ports_count,
                            net_sim.signal_time)
         net_sim.add_device(router)
 
@@ -147,6 +151,7 @@ class ConnectIns(Instruction):
         self.port2 = port2
 
     def execute(self, net_sim: sim.NetSimulation):
+        print(f'Connecting: {self.port1} - {self.port2}')
         net_sim.connect(self.port1, self.port2)
 
 
@@ -194,25 +199,25 @@ class DisconnectIns(Instruction):
 
 
 class MacIns(Instruction):
-    def __init__(self, time: int, host_name: str, interfase: int, address: List[int]):
+    def __init__(self, time: int, host_name: str, interface: int, address: List[int]):
         super().__init__(time)
         self.host_name = host_name
         self.address = address
-        self.interfase = interfase
+        self.interface = interface
 
     def execute(self, net_sim: sim.NetSimulation):
-        net_sim.assign_mac_addres(self.host_name, self.address)
+        net_sim.assign_mac_addres(self.host_name, self.address, self.interface)
 
 class IPIns(Instruction):
-    def __init__(self, time: int, host_name: str, interfase: int, ip: IP, mask: IP):
+    def __init__(self, time: int, device_name: str, interface: int, ip: IP, mask: IP):
         super().__init__(time)
-        self.host_name = host_name
+        self.device_name = device_name
         self.ip = ip
         self.mask = mask
-        self.interfase = interfase
+        self.interface = interface
 
     def execute(self, net_sim: sim.NetSimulation):
-        net_sim.assign_ip_addres(self.host_name, self.ip, self.mask)
+        net_sim.assign_ip_addres(self.device_name, self.ip, self.mask, self.interface)
 
 class SendFrameIns(Instruction):
     def __init__(self, time: int, host_name: str, mac: List[int],

@@ -47,6 +47,10 @@ class Host(Router):
     @property
     def send_receiver(self):
         return self.ports[self.port_name(0)]
+    
+    @property
+    def ip(self):
+        return self.ips[1]
 
     def check_errors(self, frame) -> Tuple[List[int], bool]:
         utils.check_config()

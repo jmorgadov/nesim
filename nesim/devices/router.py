@@ -34,7 +34,8 @@ class Route():
 class RouteTable():
     """Tabla de rutas"""
 
-    routes: List[Route] = []
+    def __init__(self) -> None:
+        self.routes: List[Route] = []
 
     def reset_routes(self) -> None:
         """Limpia la tabla de rutas."""
@@ -91,6 +92,10 @@ class RouteTable():
 class Router(IPPacketSender, RouteTable):
     """Representa un router en la simulación."""
 
+    def __init__(self, name: str, ports_count: int, signal_time: int):
+        self.routes = []
+        super().__init__(name, ports_count, signal_time)
+
     def enroute(self, packet: IPPacket):
         route = self.get_enrouting(packet.to_ip)
         to_ip = route.gateway
@@ -101,8 +106,8 @@ class Router(IPPacketSender, RouteTable):
     def on_ip_packet_received(self, packet: IPPacket) -> None:
         self.enroute(packet)
 
-    def on_frame_received(self, frame: Frame, port: str) -> None:
-        print(f'[{self.sim_time}] {self.name} received:', frame)
+    def on_frame_received(self, frame: Frame, port: int) -> None:
+        print(f'[{self.sim_time:>6}] {self.name:>18}  received:', frame)
         mac_dest = from_number_to_bit_data(frame.to_mac, 16)
         mac_dest_str = ''.join(map(str, mac_dest))
         mac_origin = from_number_to_bit_data(frame.from_mac, 16)
@@ -115,15 +120,16 @@ class Router(IPPacketSender, RouteTable):
             ip = ''.join(map(str, data[32:64]))
             if mac_dest_str == '1'*16:
                 arpq_data = ''.join(map(str, data[:32]))
+                ip_values = [i.str_binary for i in self.ips.values()]
                 if arpq_data.endswith(arpq) and \
-                    ip == self.ip.str_binary:
+                    ip in ip_values:
                     self.respond_arpq(mac_origin, port)
             else:
                 new_ip = IP.from_bin(ip)
                 self.ip_table[str(new_ip)] = mac_origin
                 if str(new_ip) in self.waiting_for_arpq:
                     for data in self.waiting_for_arpq[str(new_ip)]:
-                        self.send_frame(mac_origin, data)
+                        self.send_frame(mac_origin, data, port)
                     self.waiting_for_arpq[str(new_ip)] = []
             return
 

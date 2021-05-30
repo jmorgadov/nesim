@@ -62,6 +62,21 @@ class Device(metaclass=abc.ABCMeta):
             cantidad total de puertos del dispositivo.
         """
         return f'{self.name}_{port}'
+    
+    
+    def port_number(self, port: str):
+        """
+        Devuelve el nombre de un puerto dado su número.
+
+        Parameters
+        ----------
+        port : int
+            Número del puerto.
+
+            Este valor debe ser mayor o igual a 1 y menor o igual que la
+            cantidad total de puertos del dispositivo.
+        """
+        return int(port.split('_')[-1])
 
     def reset(self):
         """

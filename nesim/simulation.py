@@ -1,3 +1,5 @@
+from io import UnsupportedOperation
+from nesim.devices.ip_packet_sender import IPPacketSender
 from nesim.devices.multiple_port_device import MultiplePortDevice
 from nesim.devices.router import Route, Router
 from nesim.ip import IP, IPPacket
@@ -217,34 +219,38 @@ class NetSimulation():
         for device in self.devices.values():
             device.save_log(self.output_path)
 
-    def assign_mac_addres(self, host_name, mac):
+    def assign_mac_addres(self, device_name, mac, interface):
         """
         Asigna una dirección mac a un host.
 
         Parameters
         ----------
-        host_name : str
-            Nombre del host al cual se le asigna la dirección mac.
+        device_name : str
+            Nombre del dispositivo al cual se le asigna la dirección mac.
         mac : List[int]
             Dirección mac.
         """
 
-        self.hosts[host_name].mac = mac
+        self.devices[device_name].mac_addrs[interface] = mac
 
-    def assign_ip_addres(self, host_name, ip: IP, mask: IP):
+    def assign_ip_addres(self, device_name, ip: IP, mask: IP, interface: int):
         """
         Asigna una dirección mac a un host.
 
         Parameters
         ----------
-        host_name : str
-            Nombre del host al cual se le asigna la dirección mac.
+        device_name : str
+            Nombre del dispositivo al cual se le asigna la dirección mac.
         mac : List[int]
             Dirección mac.
         """
 
-        self.hosts[host_name].ip = ip
-        self.hosts[host_name].ip_mask = mask
+        device: IPPacketSender = self.devices[device_name]
+        if not isinstance(device, IPPacketSender):
+            raise UnsupportedOperation(f'Can not set ip to {device_name}')
+
+        device.ips[interface] = ip
+        device.masks[interface] = mask
 
     def update(self):
         """
@@ -264,14 +270,6 @@ class NetSimulation():
         for device in self.devices.values():
             device.reset()
 
-        # for dev in self.devices.values():
-        #     if isinstance(dev, MultiplePortDevice):
-        #         dev.update(self.time)
-
-        # for dev in self.devices.values():
-        #     if isinstance(dev, MultiplePortDevice):
-        #         dev.receive()
-
         for host in self.hosts.values():
             host.update(self.time)
 
@@ -281,11 +279,11 @@ class NetSimulation():
                     device.update(self.time)
 
         for dev in self.devices.values():
-            if isinstance(dev, Switch):
+            if isinstance(dev, Switch) or type(dev) == Router:
                 dev.update(self.time)
 
         for dev in self.devices.values():
-            if isinstance(dev, Switch):
+            if isinstance(dev, Switch) or type(dev) == Router:
                 dev.receive()
 
         for host in self.hosts.values():
