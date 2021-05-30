@@ -142,22 +142,26 @@ class Host(Device):
         frame_bit_data = Frame.build(mac, self.mac, data).bit_data
         self.send(frame_bit_data)
 
+    def send_ping_to(self, to_ip: IP) -> None:
+        self.send_ip_packet(IPPacket.ping(to_ip, self.ip))
+
     def find_mac(self, ip: IP):
         arpq = from_str_to_bit_data('ARPQ')
         ip_data = ip.bit_data
         self.send_frame([1]*16, arpq + ip_data)
 
-
-    def send_ip_package(self, ip_dest: IP, data: List[int]):
-        package = IP.build_packet(ip_dest, self.ip, data)
-        ip_dest_str = str(ip_dest)
+    def send_ip_packet(self, packet: IPPacket) -> None:
+        ip_dest_str = str(packet.to_ip)
         if ip_dest_str not in self.ip_table:
             if ip_dest_str not in self.waiting_for_arpq:
                 self.waiting_for_arpq[ip_dest_str] = []
-            self.waiting_for_arpq[ip_dest_str].append(package)
-            self.find_mac(ip_dest)
+            self.waiting_for_arpq[ip_dest_str].append(packet.bit_data)
+            self.find_mac(packet.to_ip)
         else:
-            self.send_frame(self.ip_table[ip_dest_str], package)
+            self.send_frame(self.ip_table[ip_dest_str], packet.bit_data)
+
+    def send_by_ip(self, ip_dest: IP, data: List[int]) -> None:
+        self.send_ip_packet(IPPacket(ip_dest, self.ip, data))
 
     def receive(self):
         """
@@ -206,7 +210,10 @@ class Host(Device):
         if valid_ip_packet and ip_packet.to_ip == self.ip:
             r_data = [self.sim_time, str(ip_packet.from_ip)]
             # Is ICMP protocol
-            if ip_packet.protocol == 1:
+            if ip_packet.protocol_number == 1:
+                payload_number = from_bit_data_to_number(ip_packet.payload)
+                if payload_number == 8:
+                    self.send_ip_packet(IPPacket.pong(ip_packet.from_ip, self.ip))
                 r_data.append(ip_packet.icmp_payload_msg)
             else:
                 hex_data = from_bit_data_to_hex(ip_packet.payload)

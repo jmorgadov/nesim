@@ -140,6 +140,7 @@ class IPPacket():
 
         self.ttl = from_number_to_bit_data(ttl)
         self.protocol = from_number_to_bit_data(protocol)
+        self.protocol_number = protocol
 
         self.bit_data = dest_ip.bit_data + \
                   orig_ip.bit_data + \
@@ -150,7 +151,7 @@ class IPPacket():
 
     @property
     def icmp_payload_msg(self) -> str:
-        if self.protocol != 1:
+        if self.protocol_number != 1:
             raise UnsupportedOperation('IP packet\'s protocol is not ICMP')
         payload_number = from_bit_data_to_number(self.payload)
         return PAYLOAD_TABLE.get(payload_number, 'Unknown payload number')
@@ -158,6 +159,11 @@ class IPPacket():
     @staticmethod
     def ping(dest_ip: IP, orig_ip: IP) -> IPPacket:
         payload = from_number_to_bit_data(8)
+        return IPPacket(dest_ip, orig_ip, payload, ttl=0, protocol=1)
+
+    @staticmethod
+    def pong(dest_ip: IP, orig_ip: IP) -> IPPacket:
+        payload = from_number_to_bit_data(0)
         return IPPacket(dest_ip, orig_ip, payload, ttl=0, protocol=1)
 
     @staticmethod

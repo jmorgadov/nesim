@@ -263,4 +263,4 @@ class RouteIns(Instruction):
             self.route = dv.Route(destination_ip, mask, gateway, interface)
 
     def execute(self, net_sim: sim.NetSimulation):
-        net_sim.route(self.host_name, self.action, self.route)
+        net_sim.route(self.device_name, self.action, self.route)

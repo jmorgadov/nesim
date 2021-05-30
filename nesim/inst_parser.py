@@ -6,7 +6,7 @@ from nesim.instructions import (
     CreateHostIns,
     CreateHubIns,
     CreateSwitchIns,
-    IPIns,
+    IPIns, Instruction,
     MacIns, PingIns, RouteIns, SendIPPackage,
     SendIns,
     SendFrameIns,
@@ -93,7 +93,12 @@ def _parse_single_inst(inst_text: str):
     elif inst_name == 'ping':
         host_name = temp_line[2]
         ip = IP.from_str(temp_line[3])
-        return PingIns(inst_time, host_name, ip)
+        return [
+            PingIns(inst_time, host_name, ip),
+            PingIns(inst_time + 100, host_name, ip),
+            PingIns(inst_time + 200, host_name, ip),
+            PingIns(inst_time + 300, host_name, ip)
+        ]
 
     elif inst_name == 'route':
         action = temp_line[2]
@@ -127,7 +132,15 @@ def parse_instructions(instr_lines: List[str]):
     List[Instruction]
         Lista de instrucciones.
     """
-    return [_parse_single_inst(line) for line in instr_lines]
+    instructions = []
+    for line in instr_lines:
+        inst = _parse_single_inst(line)
+        if isinstance(inst, Instruction):
+            instructions.append(inst)
+        elif isinstance(inst, list):
+            instructions += inst
+    instructions.sort(key=lambda inst: inst.time)
+    return instructions
 
 def load_instructions(inst_path: str = './script.txt'):
     """
