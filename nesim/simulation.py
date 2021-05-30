@@ -273,15 +273,16 @@ class NetSimulation():
         for host in self.hosts.values():
             host.update(self.time)
 
-        for _ in range(len(self.devices)):
-            for device in self.devices.values():
-                if isinstance(device, Hub):
-                    device.update(self.time)
 
         for dev in self.devices.values():
             if isinstance(dev, Switch) or type(dev) == Router:
                 dev.update(self.time)
 
+        for _ in range(len(self.devices)):
+            for device in self.devices.values():
+                if isinstance(device, Hub):
+                    device.update(self.time)
+    
         for dev in self.devices.values():
             if isinstance(dev, Switch) or type(dev) == Router:
                 dev.receive()

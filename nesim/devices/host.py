@@ -70,6 +70,9 @@ class Host(Router):
         self.received_data.append(r_data)
 
     def on_ip_packet_received(self, packet: IPPacket) -> None:
+        if packet.to_ip != self.ip:
+            return
+
         r_data = [self.sim_time, str(packet.from_ip)]
 
         # Is ICMP protocol

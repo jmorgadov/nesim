@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import List
+from typing import Dict, List
 from pathlib import Path
 from nesim.devices.device import Device
 from nesim.devices.cable import DuplexCableHead
@@ -19,15 +19,16 @@ class Hub(Device):
     def __init__(self, name: str, ports_count: int):
         self._updating = False
         self._received, self._sent = [], []
-        ports = {}
+        self.ports: Dict[str, DuplexCableHead] = {}
+        self.active = 0
         for i in range(ports_count):
-            ports[f'{name}_{i+1}'] = None
+            self.ports[f'{name}_{i+1}'] = None
 
-        super().__init__(name, ports)
+        super().__init__(name, self.ports)
 
     @property
     def is_active(self):
-        return False
+        return self.active
 
     def reset(self):
         self._updating = False
@@ -96,6 +97,8 @@ class Hub(Device):
                 bit = cable_head.receive_value
             else:
                 bit = cable_head.send_value
+        if bit is not None:
+            self.active = 10
         return str(bit) if bit is not None else '-'
 
     def update(self, time):
@@ -109,11 +112,13 @@ class Hub(Device):
             val = reduce(lambda x, y: x|y, p_data_filt)
 
         if not self._updating:
+            self.active = max(self.active - 1, 0)
             self._received = [self.get_port_value(p) for p in self.ports]
 
-        for _, cable_head in self.ports.items():
-            if cable_head is not None:
-                cable_head.send(val)
+        if val is not None:
+            for _, cable_head in self.ports.items():
+                if cable_head is not None:
+                    cable_head.send(val)
 
         self._sent = [self.get_port_value(p, False) for p in self.ports]
         self.special_log(time, self._received, self._sent)
