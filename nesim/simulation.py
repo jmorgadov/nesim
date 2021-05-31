@@ -1,14 +1,11 @@
 from io import UnsupportedOperation
 from nesim.devices.ip_packet_sender import IPPacketSender
-from nesim.devices.multiple_port_device import MultiplePortDevice
 from nesim.devices.router import Route, Router
-from nesim.ip import IP, IPPacket
-from random import random, randint
+from nesim.ip import IP
 from typing import Dict, List
 from nesim.devices.switch import Switch
 from nesim.devices.hub import Hub
 from nesim.devices import Device, Duplex, Host
-from nesim.devices.error_detection import get_error_detection_data
 import nesim.utils as utils
 
 
@@ -60,7 +57,8 @@ class NetSimulation():
         """
 
         if device.name in self.devices.keys():
-            raise ValueError(f'The device name {device.name} is already taken.')
+            raise ValueError(
+                f'The device name {device.name} is already taken.')
 
         self.devices[device.name] = device
 
@@ -142,6 +140,23 @@ class NetSimulation():
         self.hosts[host_name].send_frame(mac, data)
 
     def send_ip_package(self, host_name: str, ip_dest: IP, data: List[int]):
+        """
+        Env'ia un paquete IP a una dirección determinada.
+
+        Parameters
+        ----------
+        host_name : str
+            Host que envía el paquete.
+        ip_dest : IP
+            Dirección IP destino.
+        data : List[int]
+            Datos a enviar.
+
+        Raises
+        ------
+        ValueError
+            Si el host no existe.
+        """
 
         if host_name not in self.hosts.keys():
             raise ValueError(f'Unknown host {host_name}')
@@ -149,6 +164,22 @@ class NetSimulation():
         self.hosts[host_name].send_by_ip(ip_dest, data)
 
     def ping_to(self, host_name: str, ip_dest: IP):
+        """
+        Ejecuta la instrucción ``ping``.
+
+        Parameters
+        ----------
+        host_name : str
+            Host que ejecuta la acción.
+        ip_dest : IP
+            IP destino.
+
+        Raises
+        ------
+        ValueError
+            Si el host no existe.
+        """
+
         if host_name not in self.hosts.keys():
             raise ValueError(f'Unknown host {host_name}')
 
@@ -156,6 +187,20 @@ class NetSimulation():
 
     def route(self, device_name: str, action: str = 'reset',
               route: Route = None):
+        """
+        Ejecuta una de las acciones realcionadas con las rutas: ``add``,
+        ``remove``, ``reset``
+
+        Parameters
+        ----------
+        device_name : str
+            Nombre del dispositivo al que se le ejecuta la acción.
+        action : str, optional
+            Acción a ejecutar.
+        route : Route, optional
+            Ruta a añadir o eliminar.
+        """
+
         router: Router = self.devices[device_name]
         if action == 'add':
             router.add_route(route)
@@ -273,7 +318,6 @@ class NetSimulation():
         for host in self.hosts.values():
             host.update(self.time)
 
-
         for dev in self.devices.values():
             if isinstance(dev, Switch) or type(dev) == Router:
                 dev.update(self.time)
@@ -282,7 +326,7 @@ class NetSimulation():
             for device in self.devices.values():
                 if isinstance(device, Hub):
                     device.update(self.time)
-    
+
         for dev in self.devices.values():
             if isinstance(dev, Switch) or type(dev) == Router:
                 dev.receive()

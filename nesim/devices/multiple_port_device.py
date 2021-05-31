@@ -93,12 +93,17 @@ class MultiplePortDevice(Device, metaclass=abc.ABCMeta):
     def reset(self):
         pass
 
-    def update(self, time: int):
+    def update(self, time: int)-> None:
         for send_receiver in self.ports.values():
             send_receiver.update()
         super().update(time)
 
-    def receive(self):
+    def receive(self) -> None:
+        """
+        Ordena a todos los puertos a recibir la información que les
+        esté llegnado. (Leer del cable)
+        """
+
         for send_receiver in self.ports.values():
             if send_receiver.cable_head is not None:
                 send_receiver.receive()
@@ -202,4 +207,3 @@ class MultiplePortDevice(Device, metaclass=abc.ABCMeta):
     def disconnect(self, port_name: str):
         self.ports_buffer[list(self.ports.keys()).index(port_name)] = []
         self.ports[port_name].disconnect()
-        

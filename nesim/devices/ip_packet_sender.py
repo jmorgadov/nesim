@@ -7,6 +7,22 @@ from nesim.devices.frame_sender import FrameSender
 
 
 class IPPacketSender(FrameSender, metaclass=abc.ABCMeta):
+    """
+    Representa un dispositivo capaz de enviar pacquetes IP.
+
+    Attributes
+    ----------
+    ips: Dict[int, IP]
+        Tabla que contiene la dirección IP de cada puerto.
+    masks: Dict[int, IP]
+        Tabla que contiene la máscara del IP de cada puerto.
+    ip_table: Dict[int, List[int]]
+        Tabla que contiene la dirección MAC de los dispositivos según
+        la dirección IP.
+    waiting_for_arpq: Dict[int, List[List[int]]]
+        Tabla que contiene paquetes que esán en espera de una respuesta del
+        protocolo ARPQ para ser enviados.
+    """
 
     def __init__(self, name: str, ports_count: int, signal_time: int):        
         self.ips: Dict[int, IP] = {}
@@ -31,13 +47,24 @@ class IPPacketSender(FrameSender, metaclass=abc.ABCMeta):
         self.send_frame([1]*16, arpq + ip_data, port)
 
     def respond_arpq(self, dest_mac: List[int], port: int = 1) -> None:
+        """
+        Envía un frame que responde a un llamado ARPQ.
+
+        Parameters
+        ----------
+        dest_mac : List[int]
+            Mac destino.
+        port : int, optional
+            Puerto por el cual se envía, por defecto 1
+        """
+        
         arpq = from_str_to_bit_data('ARPQ')
         ip_data = self.ips[port].bit_data
         self.send_frame(dest_mac, arpq + ip_data, port)
 
 
     def send_ip_packet(self, packet: IPPacket, port: int = 1,
-                       ip_dest: IP = None) -> None:
+                       ip_dest: IP = None) -> None:           
         """
         Envía un IP packet.
 
@@ -45,6 +72,10 @@ class IPPacketSender(FrameSender, metaclass=abc.ABCMeta):
         ----------
         packet : IPPacket
             Paquete a enviar.
+        port : int, optional
+            Puerto por el cual se envía, por defecto 1
+        ip_dest : IP, optional
+            IP destno, por defecto None
         """
 
         if ip_dest is None:
@@ -68,6 +99,8 @@ class IPPacketSender(FrameSender, metaclass=abc.ABCMeta):
             Ip destino.
         data : List[int]
             Datos a enviar.
+        port : int, optional
+            Puerto por el cual se envía, por defecto 1
         """
 
         self.send_ip_packet(IPPacket(ip_dest, self.ips[port], data), port)

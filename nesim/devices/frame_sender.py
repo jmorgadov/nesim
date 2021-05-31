@@ -1,10 +1,18 @@
 import abc
-from nesim.devices.multiple_port_device import MultiplePortDevice
 from typing import Dict, List
+from nesim.devices.multiple_port_device import MultiplePortDevice
 from nesim.frame import Frame
 
 
 class FrameSender(MultiplePortDevice, metaclass=abc.ABCMeta):
+    """
+    Representa un dispositivo capaz de enviar frames.
+
+    Attributes
+    ----------
+    mac_addrs: Dict[int, List[int]]
+        Tabla que contiene la dirección MAC de cada puerto.
+    """
 
     def __init__(self, name: str, ports_count: int, signal_time: int):
         self.mac_addrs: Dict[int, List[int]] = {}
@@ -28,8 +36,8 @@ class FrameSender(MultiplePortDevice, metaclass=abc.ABCMeta):
             packages.append(data[:package_size])
             data = data[package_size:]
 
-        sr = self.ports[self.port_name(port)]
-        sr.send(packages)
+        send_receiver = self.ports[self.port_name(port)]
+        send_receiver.send(packages)
 
     def send_frame(self, mac: List[int], data: List[int], port: int = 1):
         """
@@ -45,6 +53,7 @@ class FrameSender(MultiplePortDevice, metaclass=abc.ABCMeta):
         data : List[int]
             Frame a enviar.
         """
+
         frame = Frame.build(mac, self.mac_addrs[port], data)
         print(f'[{self.sim_time:>6}] {self.name + " - " + str(port):>18}      send: {frame}')
         self.send(frame.bit_data, port=port)

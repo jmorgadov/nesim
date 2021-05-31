@@ -97,6 +97,19 @@ class Router(IPPacketSender, RouteTable):
         super().__init__(name, ports_count, signal_time)
 
     def enroute(self, packet: IPPacket, port: int = 1, frame: Frame = None):
+        """
+        Enruta un paquete IP.
+
+        Parameters
+        ----------
+        packet : IPPacket
+            Paquete a enrutar.
+        port : int, optional
+            Puerto por el cual sale el paquete (interfase), por defecto 1.
+        frame : Frame, optional
+            Frame que contiene al paquete, por defecto None.
+        """
+
         route = self.get_enrouting(packet.to_ip)
 
         if route is None and frame is not None:
@@ -114,6 +127,19 @@ class Router(IPPacketSender, RouteTable):
         super().send_ip_packet(packet, route.interface, to_ip)
 
     def on_ip_packet_received(self, packet: IPPacket, port: int = 1, frame: Frame = None) -> None:
+        """
+        Se ejecuta cuando un packete IP es recibido.
+
+        Parameters
+        ----------
+        packet : IPPacket
+            Paquete recibido.
+        port : int, optional
+            Puerto por el cual llegó el paquete, por defecto 1.
+        frame : Frame, optional
+            Frame que contiene el paquete, por defecto None.
+        """
+
         self.enroute(packet, port, frame)
 
     def on_frame_received(self, frame: Frame, port: int) -> None:
